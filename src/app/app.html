@@ -1,0 +1,39 @@
+<div id="topo">
+  <app-header />
+
+  <section class="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 lg:px-10 xl:px-16">
+    <span
+      class="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400"
+    >
+      ● Hub da comunidade
+    </span>
+    <h1 class="font-display text-4xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-6xl">
+      Bem-vindo ao <span class="text-violet-600 dark:text-violet-400">Filipe Ramos</span> Hub
+    </h1>
+    <p class="mx-auto mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
+      Hub para juntarmos todos os canais que nos ajudam a manter o conteúdo da voz mais gostosa do Brasil girando por aí.
+    </p>
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+      <a
+        href="#canais"
+        class="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_25px_-6px] shadow-violet-500/70 transition hover:bg-violet-500"
+      >
+        Ver Glossário de Canais
+      </a>
+      <a
+        href="#care-packages"
+        class="rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-violet-400 hover:text-violet-600 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-violet-500 dark:hover:text-violet-400"
+      >
+        Ver Care Packages
+      </a>
+    </div>
+
+    <div class="mt-10">
+      <app-stats-bar />
+    </div>
+  </section>
+
+  <app-canais-section />
+  <app-modpacks-section />
+  <app-footer />
+</div>

@@ -1,0 +1,42 @@
+<header class="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-violet-500/20 dark:bg-[#0b0a12]/80">
+  <div class="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3.5 sm:px-6 lg:px-10 xl:px-16">
+    <a href="#topo" class="flex items-center gap-2.5">
+      <img
+        src="https://yt3.googleusercontent.com/6Xp6EWdRKEGrSrhlfDeRM84TLhYPrZafguFDiDrO9NPd1pp5M_DQ3SzcaTv7FPn0OEaJ3bWwvUk=s900-c-k-c0x00ffffff-no-rj"
+        alt="Filipe Ramos"
+        class="h-9 w-9 rounded-lg object-cover shadow-[0_0_20px_-4px] shadow-violet-500/60"
+      />
+      <span class="font-display text-lg font-semibold tracking-wide text-zinc-900 dark:text-white">
+        FILIPE RAMOS
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-1 text-sm font-medium sm:flex">
+      <a
+        href="#canais"
+        class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400"
+      >
+        Glossário de Canais
+      </a>
+      <a
+        href="#care-packages"
+        class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400"
+      >
+        Care Packages
+      </a>
+    </nav>
+
+    <button
+      type="button"
+      (click)="toggleTheme()"
+      class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-violet-400 hover:text-violet-600 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-violet-500 dark:hover:text-violet-400"
+      [attr.aria-label]="isDark() ? 'Ativar tema claro' : 'Ativar tema escuro'"
+    >
+      @if (isDark()) {
+        <span aria-hidden="true">☀️</span>
+      } @else {
+        <span aria-hidden="true">🌙</span>
+      }
+    </button>
+  </div>
+</header>
