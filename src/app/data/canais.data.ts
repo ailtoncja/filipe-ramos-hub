@@ -84,5 +84,13 @@ export const CANAIS: Canal[] = [
     categoria: 'nao-oficial',
     avatarUrl: 'https://yt3.googleusercontent.com/y18Gy4xVeTfiVl5vUgvhHUNCHLwPnEn1bC5C8Bd4QDsYqZx9m-ZHW6ORSifRQrLo5BXBHx0Sbg=s160-c-k-c0x00ffffff-no-rj',
     youtubeUrl: 'https://www.youtube.com/@BaudeLives96'
+  },
+  {
+    nome: '@rodrigosantos1264',
+    descricao: 'Canal de vídeos não oficial',
+    categoria: 'nao-oficial',
+    avatarUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_kYdvfW64UBV7cMASwlHR-uPJLsO4K7ajZYsqV9grEFfQ=s160-c-k-c0x00ffffff-no-rj',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PLAephF92zy_C20uLJTLE7IF9vIv0bAlZv'
   }
+  
 ];
