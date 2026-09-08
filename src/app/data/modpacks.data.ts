@@ -59,7 +59,7 @@ export const MODPACKS: Modpack[] = [
     jogo: 'Fallout: New Vegas',
     descricao: 'Modpack completo.',
     imagemUrl: 'https://cdn.mos.cms.futurecdn.net/YqaQ8StNTtu9JxC83EnJpD.jpg',
-    itens: [{ label: 'Baixar Modpack', url: 'https://drive.google.com/file/d/11Rp6Om32mX7NyPmR5ZXiTpilKcZWBFQ7/view?usp=sharing' }]
+    itens: [{ label: 'Modpack completo (Fallout: New Vegas)', url: 'https://drive.google.com/file/d/11Rp6Om32mX7NyPmR5ZXiTpilKcZWBFQ7/view?usp=sharing' }]
   },
   {
     jogo: 'S.T.A.L.K.E.R.: Call of Pripyat',
@@ -198,7 +198,7 @@ export const MODPACKS: Modpack[] = [
     imagemUrl: 'https://sm.ign.com/t/ign_br/news/g/gta-san-an/gta-san-andreas-vr-delayed-indefinitely-as-meta-focuses-on-o_hz21.1200.jpg',
     itens: [
       { label: 'Vídeo tutorial (como baixar)', url: 'https://www.youtube.com/watch?v=38OkRFX41K4' },
-      { label: 'Baixar Modpack', url: 'https://mega.nz/file/RwxiHTpb#ayDlu32bjhs6VAD9OV0p9BOsTXh9H8BF03i0RxAQ9Ss' }
+      { label: 'Modpack Enhanced Edition', url: 'https://mega.nz/file/RwxiHTpb#ayDlu32bjhs6VAD9OV0p9BOsTXh9H8BF03i0RxAQ9Ss' }
     ]
   },
   {
@@ -208,7 +208,7 @@ export const MODPACKS: Modpack[] = [
     itens: [
       { label: 'Ver coleção na Nexus Mods', url: 'https://www.nexusmods.com/games/cyberpunk2077/collections/tydihx' },
       { label: 'Lista de mods', url: 'https://drive.google.com/file/d/1qaM1RSUz-msAJ2fRpX0GTKXjANc23VJe/view' },
-      { label: 'Simple Loot Icons', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3365' }
+      { label: 'Simple Loot Icons (desatualizado)', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3365' }
     ]
   },
   {
