@@ -110,7 +110,10 @@ export const MODPACKS: Modpack[] = [
     jogo: 'Final Fantasy XII',
     descricao: 'Mod de rebalanceamento. Apenas em inglês, instruções no site da Nexus Mods.',
     imagemUrl: 'https://staticdelivery.nexusmods.com/mods/2304/images/324/324-1695789773-542958640.png',
-    itens: [{ label: 'Ver mod na Nexus Mods', url: 'https://www.nexusmods.com/finalfantasy12/mods/324' }]
+    itens: [
+      { label: 'Ver mod na Nexus Mods', url: 'https://www.nexusmods.com/finalfantasy12/mods/324' },
+      { label: 'High Quality Preview Icons', url: 'https://www.nexusmods.com/finalfantasy12/mods/312' }
+    ]
   },
   {
     jogo: 'Fallout 2',
@@ -130,7 +133,8 @@ export const MODPACKS: Modpack[] = [
     imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/582010/capsule_616x353.jpg?t=1773328926',
     itens: [
       { label: 'Baixar pack de mods', url: 'https://drive.google.com/file/d/1x7UhSnpcjSMunPFbhbzoXOyqbpcJIK_y/view?usp=sharing' },
-      { label: 'Infográfico', url: 'https://drive.google.com/file/d/1a4jFwgMALxmuP9C2ewfliBZ6u_Asg1zp/view?usp=sharing' }
+      { label: 'Infográfico', url: 'https://drive.google.com/file/d/1a4jFwgMALxmuP9C2ewfliBZ6u_Asg1zp/view?usp=sharing' },
+      { label: 'No Ciri and Geralt Fake Swords', url: 'https://www.nexusmods.com/monsterhunterworld/mods/6457' }
     ]
   },
   {
@@ -184,7 +188,8 @@ export const MODPACKS: Modpack[] = [
     imagemUrl: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2050650/capsule_616x353.jpg?t=1772502922',
     itens: [
       { label: 'Tabela de armas (inglês)', url: 'https://drive.google.com/file/d/1qjbzlJdflKbTnPb13YxNh26aMWR9WyxD/view?usp=sharing' },
-      { label: 'Tabela de armas (PT-BR)', url: 'https://drive.google.com/file/d/1CtAFP-oNOTF8AcjrXitoAY5JVIWUVZdt/view?usp=sharing' }
+      { label: 'Tabela de armas (PT-BR)', url: 'https://drive.google.com/file/d/1CtAFP-oNOTF8AcjrXitoAY5JVIWUVZdt/view?usp=sharing' },
+      { label: 'Tighter Shotgun Spread', url: 'https://www.nexusmods.com/residentevil42023/mods/442' }
     ]
   },
   {
@@ -202,7 +207,8 @@ export const MODPACKS: Modpack[] = [
     imagemUrl: 'https://cdn1.epicgames.com/offer/77f2b98e2cef40c8a7437518bf420e47/EGS_Cyberpunk2077_CDPROJEKTRED_S1_03_2560x1440-359e77d3cd0a40aebf3bbc130d14c5c7',
     itens: [
       { label: 'Ver coleção na Nexus Mods', url: 'https://www.nexusmods.com/games/cyberpunk2077/collections/tydihx' },
-      { label: 'Lista de mods', url: 'https://drive.google.com/file/d/1qaM1RSUz-msAJ2fRpX0GTKXjANc23VJe/view' }
+      { label: 'Lista de mods', url: 'https://drive.google.com/file/d/1qaM1RSUz-msAJ2fRpX0GTKXjANc23VJe/view' },
+      { label: 'Simple Loot Icons', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3365' }
     ]
   },
   {
@@ -285,8 +291,45 @@ export const MODPACKS: Modpack[] = [
     itens: [
       { label: 'Keretus\' Improved Health Bars', url: 'https://www.nexusmods.com/fallout76/mods/2966' },
       { label: 'Clean Radium Rifle', url: 'https://www.nexusmods.com/fallout76/mods/215' },
-      { label: 'Hide - Disable Jetpack Visuals', url: 'https://www.nexusmods.com/fallout76/mods/2871' }
+      { label: 'Hide - Disable Jetpack Visuals', url: 'https://www.nexusmods.com/fallout76/mods/2871' },
+      { label: 'Clear descriptions and scrap names (desatualizado)', url: 'https://www.nexusmods.com/fallout76/mods/1814' }
     ],
     configuracao: '[EnlightenDebug]\nfSkyCubemapMaxVisibility=0.30\nfSkyCubemapMinVisibility=0.20'
+  },
+  {
+    jogo: 'Dragon\'s Dogma 2',
+    descricao: 'Mods de interface e balanceamento.',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2054970/capsule_616x353.jpg',
+    itens: [
+      { label: 'Clear Effect Descriptions (desatualizado)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/314' },
+      { label: 'End-Game Stats for All Dragonforged Equipment (desatualizado)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/410' }
+    ]
+  },
+  {
+    jogo: 'Lightning Returns: Final Fantasy XIII',
+    descricao: 'Mods de interface e gameplay.',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/345350/capsule_616x353.jpg',
+    itens: [
+      { label: 'All Shields Invisible', url: 'https://www.nexusmods.com/lightningreturnsfinalfantasy13/mods/28' },
+      { label: 'Cleaner HUD', url: 'https://www.nexusmods.com/lightningreturnsfinalfantasy13/mods/29' },
+      { label: 'Gameplay Tweaks', url: 'https://www.nexusmods.com/lightningreturnsfinalfantasy13/mods/30' }
+    ]
+  },
+  {
+    jogo: 'Final Fantasy XIII',
+    descricao: 'Mods de câmera e gameplay.',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/292120/capsule_616x353.jpg',
+    itens: [
+      { label: 'Centered Camera', url: 'https://www.nexusmods.com/finalfantasy13/mods/74' },
+      { label: 'Less Grinding', url: 'https://www.nexusmods.com/finalfantasy13/mods/73' }
+    ]
+  },
+  {
+    jogo: 'Resident Evil Requiem',
+    descricao: 'Mod que substitui os ícones do inventário por imagens dos modelos 3D. Requer Fluffy Mod Manager.',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/capsule_616x353.jpg',
+    itens: [
+      { label: '3D Icons', url: 'https://www.nexusmods.com/residentevilrequiem/mods/1049' }
+    ]
   }
 ];
