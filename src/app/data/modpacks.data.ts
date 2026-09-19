@@ -109,8 +109,9 @@ export const MODPACKS: Modpack[] = [
   {
     jogo: 'Final Fantasy XII',
     descricao: 'Mod de rebalanceamento. Apenas em inglês, instruções no site da Nexus Mods.',
-    imagemUrl: 'https://staticdelivery.nexusmods.com/mods/2304/images/324/324-1695789773-542958640.png',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/595520/header.jpg',
     itens: [
+      { label: 'Baixar Care Package', url: 'https://drive.google.com/file/d/1r5eON0XwRgVm5bje55li09X3T8vPzY2d/view?usp=sharing' },
       { label: 'Ver mod na Nexus Mods', url: 'https://www.nexusmods.com/finalfantasy12/mods/324' },
       { label: 'High Quality Preview Icons', url: 'https://www.nexusmods.com/finalfantasy12/mods/312' }
     ]
