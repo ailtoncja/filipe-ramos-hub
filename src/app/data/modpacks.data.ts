@@ -332,5 +332,13 @@ export const MODPACKS: Modpack[] = [
     itens: [
       { label: '3D Icons', url: 'https://www.nexusmods.com/residentevilrequiem/mods/1049' }
     ]
+  },
+  {
+    jogo: 'The Elder Scrolls IV: Oblivion Remastered',
+    descricao: 'Care Package para The Elder Scrolls IV: Oblivion Remastered.',
+    imagemUrl: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2623190/a7cee9165bb1bfc092c390c5cff215ce0e381dfc/header.jpg',
+    itens: [
+      { label: 'Baixar Care Package', url: 'https://www.mediafire.com/file/xtmyiq78lccck4x/Drag_%2526_Drop_-_OBLIVION_REMASTERED.zip/file' }
+    ]
   }
 ];
