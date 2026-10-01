@@ -105,6 +105,10 @@ export const LIVES: Record<string, LivesDoJogo> = {
   'The Elder Scrolls IV: Oblivion Remastered': {
     fontes: [{ url: 'https://www.youtube.com/watch?v=YKiCtMLaAGE&list=PLMH8O4HxQDTI', canal: 'Divine Path' }]
   },
+  'The Witcher 3: Wild Hunt': {
+    fontes: [{ url: 'https://www.youtube.com/watch?v=trjbxXpnT3E&list=PLsP_IYzIUnZjwxN68LEj9u9qTdnBE4p6F', canal: 'Ânderson Ely' }],
+    aviso: 'As lives "Um tiquin de Witcher e depois Monster Hunter" também têm Monster Hunter.'
+  },
   'Yu-Gi-Oh! Capsule Monster Coliseum': {
     fontes: [{ url: 'https://www.youtube.com/watch?v=qgwud537s9s', canal: 'Não é o Filipe Ramos' }]
   },
