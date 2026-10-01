@@ -465,5 +465,100 @@ export const MODPACKS: Modpack[] = [
       { label: 'Baixar retextura HD (by Moataz)', url: 'https://www.mediafire.com/file/km8dx7lkswyuv2z/Midnight_Club_3_Remix_HD_Textures_by_Moataz.rar/file' },
       { label: 'MC3 - Enhanced Vehicle Pack 1', url: 'https://www.nexusmods.com/midnightclub3dubeditionremix/mods/3' }
     ]
+  },
+  {
+    jogo: 'The Witcher 3: Wild Hunt',
+    descricao: 'Care Package drag & drop com 17 mods já mesclados. Feito para a versão Next-Gen 4.04 (Steam ou GOG).',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/292030/capsule_616x353.jpg',
+    itens: [
+      { label: 'Baixar Care Package (só versão 4.04, leia os avisos abaixo)', url: 'https://drive.google.com/file/d/1oSMsk_P2UZsuVN2gjPDWED2LBi7Y4Li2/view?usp=sharing' },
+      { label: 'Script Merger (usado pra mesclar, já vem pronto no pack)', url: 'https://www.nexusmods.com/witcher3/mods/484' }
+    ],
+    grupos: [
+      {
+        titulo: 'Mapa e interface',
+        mods: [
+          { label: 'All Quest Objectives On Map', url: 'https://www.nexusmods.com/witcher3/mods/943', descricao: 'Mostra no mapa os objetivos de todas as quests ativas ao mesmo tempo.' },
+          { label: 'No Levels for All Quest Objectives on Map', url: 'https://www.nexusmods.com/witcher3/mods/4256', descricao: 'Patch que faz o mod acima funcionar com o No Levels, tirando o nível das quests no mapa.' },
+          { label: 'Fast Travel From Anywhere', url: 'https://www.nexusmods.com/witcher3/mods/7157', descricao: 'Viagem rápida direto pelo mapa, sem precisar ir até uma placa.' },
+          { label: 'No Talk Icon NEXT GEN', url: 'https://www.nexusmods.com/witcher3/mods/10107', descricao: 'Esconde o balãozinho de fala em cima dos NPCs.' },
+          { label: 'Unified Oil Icons', url: 'https://www.nexusmods.com/witcher3/mods/4785', descricao: 'Óleos de todos os níveis usam o mesmo ícone, só muda a cor do fundo.' }
+        ]
+      },
+      {
+        titulo: 'Gameplay, loot e economia',
+        mods: [
+          { label: 'No Levels', url: 'https://www.nexusmods.com/witcher3/mods/3605', descricao: 'Tira o escalonamento por nível: itens sem requisito de nível e inimigos com status fixos. O nível só dá pontos de habilidade.' },
+          { label: 'No Decorative Container Looting', url: 'https://www.nexusmods.com/witcher3/mods/2944', descricao: 'Barris, cestos e caixotes deixam de ser saqueáveis, só baús. Tem menu em Opções > Mods.' },
+          { label: 'No Junk Weapon Drops + No Junky Junk Drops', url: 'https://www.nexusmods.com/witcher3/mods/2881', descricao: 'Inimigos param de dropar armas comuns e lixo.' },
+          { label: 'Less Junk', url: 'https://www.nexusmods.com/witcher3/mods/7239', descricao: 'Remove o lixo comum de baús e dos drops de monstros.' },
+          { label: 'Disable Useless Haft-Junk-Crafting', url: 'https://www.nexusmods.com/witcher3/mods/6929', descricao: 'Tira a receita inútil de cabo (haft) da criação.' },
+          { label: 'Stack Your Items', url: 'https://www.nexusmods.com/witcher3/mods/7175', descricao: 'Comida, ingredientes, virotes e outros itens empilham até 10000.' }
+        ]
+      },
+      {
+        titulo: 'Visual e câmera',
+        mods: [
+          { label: 'Enhanced Water Restored', url: 'https://www.nexusmods.com/witcher3/mods/12655', descricao: 'Água bem mais bonita.' },
+          { label: 'Pesky sword trails begone', url: 'https://www.nexusmods.com/witcher3/mods/924', descricao: 'Remove o rastro colorido das espadas.' },
+          { label: 'No Witcher Sense Zoom FX', url: 'https://www.nexusmods.com/witcher3/mods/351', descricao: 'Tira o zoom e os efeitos de câmera do sentido de bruxo.' },
+          { label: 'Smooth Camera Motion', url: 'https://www.nexusmods.com/witcher3/mods/7155', descricao: 'Tira o balanço da câmera quando o Geralt corre.' },
+          { label: 'Slim Gloves', url: 'https://www.nexusmods.com/witcher3/mods/4646', descricao: 'Deixa as luvas do Geralt mais finas.' },
+          { label: 'Skippy Skippy', url: 'https://www.nexusmods.com/witcher3/mods/7154', descricao: 'Pula os vídeos de abertura e os resumos narrados das telas de carregamento.' }
+        ]
+      }
+    ],
+    notas: [
+      {
+        titulo: '⚠️ Atenção: só funciona na versão 4.04',
+        texto: 'O pack foi feito pra versão Next-Gen 4.04 do jogo, na Steam ou na GOG.\n\nNo dia 29/09/2026 saiu o The Witcher 3 Remastered (versão 5.00), que atualizou o jogo sozinho pra todo mundo no PC. Vários mods do pack (No Levels, All Quest Objectives On Map e outros) ainda não funcionam no Remastered. A versão antiga Classic (1.32) também não serve.\n\nPra ver a sua versão, abra o jogo: ela aparece no canto do menu principal. Se for 4.04, pode pular direto pro "Como instalar". Se for 5.00, siga os tutoriais abaixo pra voltar pra 4.04.\n\nEpic Games: a Epic não deixa voltar a versão do jogo, então por enquanto o pack não funciona lá.'
+      },
+      {
+        titulo: '💾 Antes de voltar a versão: backup dos saves',
+        passos: [
+          'Aperte Windows + R.',
+          'Clique em "Copiar" abaixo, cole na janelinha e dê Enter.',
+          'Copie a pasta "gamesaves" pra Área de Trabalho, um pendrive ou a nuvem.'
+        ],
+        dica: 'Saves feitos no Remastered (5.00) podem NÃO abrir na 4.04. Saves antigos, de antes do Remastered, funcionam normal.',
+        codigo: '%USERPROFILE%\\Documents\\The Witcher 3'
+      },
+      {
+        titulo: '⏪ Voltar para a 4.04 (Steam)',
+        passos: [
+          'Na Biblioteca da Steam, clique com o botão direito em The Witcher 3: Wild Hunt e vá em Propriedades.',
+          'Abra a aba "Betas" (ou "Versões e Betas").',
+          'Na lista, escolha a opção "next-gen". NÃO escolha "classic", que é a versão antiga 1.32.',
+          'Feche a janela e espere a Steam terminar o download.',
+          'Abra o jogo e confira se o menu mostra 4.04.'
+        ],
+        dica: 'Pra voltar pro Remastered depois, é só fazer o mesmo caminho e escolher "Nenhum".'
+      },
+      {
+        titulo: '⏪ Voltar para a 4.04 (GOG Galaxy)',
+        passos: [
+          'No GOG Galaxy, clique no The Witcher 3 e depois no ícone de ajustes, ao lado do botão Jogar.',
+          'Vá em Gerenciar instalação > Configurar...',
+          'Desligue a atualização automática do jogo.',
+          'Em "Canais Beta" / "Versão", escolha a versão 4.04 / Next-Gen. Também NÃO escolha "Classic".',
+          'Clique em OK, espere o download e confira se o menu do jogo mostra 4.04.'
+        ]
+      },
+      {
+        titulo: '📦 Como instalar o Care Package',
+        passos: [
+          'Baixe o Care Package e extraia o .zip (botão direito > Extrair tudo). Não arraste direto de dentro do .zip.',
+          'Abra a pasta do jogo. Steam: botão direito no jogo > Gerenciar > Navegar pelos arquivos locais. GOG: ícone de ajustes > Gerenciar instalação > Mostrar pasta. A pasta certa tem dentro as pastas "bin", "content" e "dlc".',
+          'Abra a pasta "ARRASTE ISTO PARA A PASTA DO JOGO" do pack, selecione tudo (Ctrl + A) e arraste pra dentro da pasta do jogo.',
+          'Se o Windows perguntar: "Mesclar pastas?" > Sim. "Substituir arquivos?" > Substituir no destino. "Permissão de administrador" > Continuar (marque "Fazer isso para todos os itens").',
+          'Pronto, é só abrir o jogo e jogar.'
+        ],
+        dica: 'O menu do No Decorative Containers fica em Opções > Mods. O tutorial completo também vem no arquivo LEIA-ME dentro do .zip.'
+      },
+      {
+        titulo: '🧹 Já tinha outros mods? / Como desinstalar',
+        texto: 'O pack foi montado pra funcionar sozinho: os mods já vêm mesclados entre si (pasta mod0000_MergedFiles). Se você já tinha outros mods, faça backup da sua pasta "mods" antiga e apague ela da pasta do jogo antes de instalar. Misturar com outros mods pode dar erro de script ao abrir o jogo.\n\nPra desinstalar: apague a pasta "mods" e a pasta "dlc\\dlcstackyouritems" de dentro da pasta do jogo. Pra deixar tudo 100% original, use também Propriedades > Arquivos instalados > Verificar integridade dos arquivos (Steam) ou Gerenciar instalação > Verificar / Reparar (GOG).\n\nErro de script ao abrir o jogo? Confira se o jogo está na 4.04 e se não tem outros mods misturados.'
+      }
+    ]
   }
 ];
