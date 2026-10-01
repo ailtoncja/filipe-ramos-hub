@@ -57,6 +57,9 @@ export const LIVES: Record<string, LivesDoJogo> = {
   'GTA: San Andreas': {
     fontes: [{ url: 'https://www.youtube.com/playlist?list=PLQ1pWjTQJp3b4k6vqpTjrmQ8iZL0vQ_-i', canal: 'Não é o Filipe Ramos' }]
   },
+  'Midnight Club 3: DUB Edition Remix': {
+    fontes: [{ url: 'https://www.youtube.com/playlist?list=PLE94u5m-YVsU', canal: 'Divine Path' }]
+  },
   'Monster Hunter: World': {
     fontes: [{ url: 'https://www.youtube.com/playlist?list=PLHB19CQ5PUz8', canal: 'Divine Path' }]
   },
@@ -84,7 +87,7 @@ export const LIVES: Record<string, LivesDoJogo> = {
   'Resident Evil: Revelations 2': {
     fontes: [{ url: 'https://www.youtube.com/playlist?list=PLFhBfWdb35XQ', canal: 'Divine Path' }]
   },
-  'S.T.A.L.K.E.R.: Call of Chernobyl': {
+  'S.T.A.L.K.E.R.: Shadow of Chernobyl': {
     fontes: [{ url: 'https://www.youtube.com/playlist?list=PLGwL5O8DUECI', canal: 'Divine Path' }]
   },
   'S.T.A.L.K.E.R.: Call of Pripyat': {

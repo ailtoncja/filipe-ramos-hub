@@ -79,7 +79,7 @@ export const MODPACKS: Modpack[] = [
     itens: [{ label: 'Ver lista de mods', url: 'https://drive.google.com/file/d/1tm2TgSD64ZJRfsW3JNQEcXhq0TEDI879/view?usp=sharing' }]
   },
   {
-    jogo: 'S.T.A.L.K.E.R.: Call of Chernobyl',
+    jogo: 'S.T.A.L.K.E.R.: Shadow of Chernobyl',
     descricao: 'Lista de mods baixados e alterações feitas.',
     imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2427410/7df10172386cd2b1b359f36705560c5686e6b203/capsule_616x353.jpg?t=1771270054',
     itens: [{ label: 'Ver lista de mods', url: 'https://drive.google.com/file/d/152s0Xo5PTZEty1xd3ukf2-PhYr8p2c1s/view?usp=sharing' }]
@@ -455,6 +455,15 @@ export const MODPACKS: Modpack[] = [
     imagemUrl: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2623190/a7cee9165bb1bfc092c390c5cff215ce0e381dfc/header.jpg',
     itens: [
       { label: 'Baixar Care Package', url: 'https://www.mediafire.com/file/xtmyiq78lccck4x/Drag_%2526_Drop_-_OBLIVION_REMASTERED.zip/file' }
+    ]
+  },
+  {
+    jogo: 'Midnight Club 3: DUB Edition Remix',
+    descricao: 'Retextura em HD e pack de carros melhorados.',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/en/6/69/Midnight_Club_3_-_DUB_Edition_Coverart.jpg',
+    itens: [
+      { label: 'Baixar retextura HD (by Moataz)', url: 'https://www.mediafire.com/file/km8dx7lkswyuv2z/Midnight_Club_3_Remix_HD_Textures_by_Moataz.rar/file' },
+      { label: 'MC3 - Enhanced Vehicle Pack 1', url: 'https://www.nexusmods.com/midnightclub3dubeditionremix/mods/3' }
     ]
   }
 ];
