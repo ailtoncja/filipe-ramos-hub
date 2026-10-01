@@ -54,12 +54,24 @@ function tiposDoModpack(modpack: Modpack): Set<string> {
 
 type Aba = 'mods' | 'lives';
 
-/** Link de playlist vira o player da playlist; link de vídeo avulso vira o player do vídeo. */
+/**
+ * Link com playlist vira o player da playlist, começando no vídeo do link (watch?v=...&list=...)
+ * quando houver; link de vídeo avulso vira o player do vídeo.
+ */
 function urlDoPlayerDeLive(url: string): string | null {
   try {
-    const lista = new URL(url).searchParams.get('list');
+    const params = new URL(url).searchParams;
+    const lista = params.get('list');
     if (lista) {
-      return `https://www.youtube-nocookie.com/embed/videoseries?list=${lista}`;
+      const video = params.get('v');
+      if (!video) {
+        return `https://www.youtube-nocookie.com/embed/videoseries?list=${lista}`;
+      }
+      const inicio = parseInt(params.get('t') ?? '', 10);
+      return (
+        `https://www.youtube-nocookie.com/embed/${video}?list=${lista}` +
+        (inicio > 0 ? `&start=${inicio}` : '')
+      );
     }
   } catch {
     return null;
