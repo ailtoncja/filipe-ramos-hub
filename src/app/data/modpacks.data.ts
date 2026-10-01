@@ -12,7 +12,7 @@ export const MODPACKS: Modpack[] = [
   {
     jogo: 'Bloodborne',
     descricao: 'Mapas em alta resolução e o projeto editável do mundo do jogo.',
-    imagemUrl: 'https://tm.ibxk.com.br/2021/03/26/26130502004119.jpg',
+    imagemUrl: 'https://image.api.playstation.com/vulcan/img/rnd/202010/2614/NVmnBXze9ElHzU6SmykrJLIV.png?w=720',
     itens: [
       { label: 'Mapa 9000 x 10000', url: 'https://drive.google.com/file/d/1VS6cDpYdr-fAPv1wEIsReE0gaRfBZE0K/view?usp=drive_link' },
       { label: 'Mapa 4500 x 9000', url: 'https://drive.google.com/file/d/19bnXzqgcrhkOxfU3Pwb4ZxOqZY0XknRt/view?usp=drive_link' },
@@ -35,7 +35,12 @@ export const MODPACKS: Modpack[] = [
     itens: [{ label: 'Baixar Care Package', url: 'https://drive.google.com/file/d/11SvsBEn50X6C3QjKMr5OLgSDvNO8atSB/view?usp=sharing' },
       { label: 'Baixar Game', url: 'https://www.myabandonware.com/game/need-for-speed-underground-2-ega#download' }
     ],
-    configuracao: 'Ao entrar no MyAbandonWare, não esqueça de baixar a versão correta do jogo que seria a MagiPack.'
+    notas: [
+      {
+        titulo: '⚠️ Atenção',
+        texto: 'Ao entrar no MyAbandonWare, não esqueça de baixar a versão correta do jogo que seria a MagiPack.'
+      }
+    ]
   },
   {
     jogo: 'Beat Down: Fists of Vengeance',
@@ -208,8 +213,53 @@ export const MODPACKS: Modpack[] = [
     imagemUrl: 'https://cdn1.epicgames.com/offer/77f2b98e2cef40c8a7437518bf420e47/EGS_Cyberpunk2077_CDPROJEKTRED_S1_03_2560x1440-359e77d3cd0a40aebf3bbc130d14c5c7',
     itens: [
       { label: 'Ver coleção na Nexus Mods', url: 'https://www.nexusmods.com/games/cyberpunk2077/collections/tydihx' },
-      { label: 'Lista de mods', url: 'https://drive.google.com/file/d/1qaM1RSUz-msAJ2fRpX0GTKXjANc23VJe/view' },
       { label: 'Simple Loot Icons (desatualizado)', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3365' }
+    ],
+    grupos: [
+      {
+        titulo: 'Requisitos (instale primeiro)',
+        mods: [
+          { label: 'Cyber Engine Tweaks', url: 'https://www.nexusmods.com/cyberpunk2077/mods/107' },
+          { label: 'REDscript', url: 'https://www.nexusmods.com/cyberpunk2077/mods/1511' },
+          { label: 'TweakXL', url: 'https://www.nexusmods.com/cyberpunk2077/mods/4197' },
+          { label: 'RED4ext', url: 'https://www.nexusmods.com/cyberpunk2077/mods/2380' },
+          { label: 'Native Settings UI', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3518' },
+          { label: 'cybercmd', url: 'https://www.nexusmods.com/cyberpunk2077/mods/5176' }
+        ]
+      },
+      {
+        titulo: 'Visual, HUD e imersão',
+        mods: [
+          { label: 'FX Begone - Vignette', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9209' },
+          { label: 'FX Begone - Inventory', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9209' },
+          { label: 'Blur Begone', url: 'https://www.nexusmods.com/cyberpunk2077/mods/8105' },
+          { label: 'Extra Clean Hacking Screen', url: 'https://www.nexusmods.com/cyberpunk2077/mods/4381' },
+          { label: 'Minimalist Loot Icon', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9379' },
+          { label: 'Non-Hideable HUD Removal', url: 'https://www.nexusmods.com/cyberpunk2077/mods/555' },
+          { label: 'Hide Distant 2D Cars', url: 'https://www.nexusmods.com/cyberpunk2077/mods/1282' },
+          { label: 'Ragdoll Physics Overhaul', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3858' },
+          { label: 'More Blood Splatters', url: 'https://www.nexusmods.com/cyberpunk2077/mods/3975' },
+          { label: 'Status Effect Adjust', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9659' }
+        ]
+      },
+      {
+        titulo: 'Gameplay e armas',
+        mods: [
+          { label: 'Unequip Mods', url: 'https://www.nexusmods.com/cyberpunk2077/mods/2358' },
+          { label: 'Auto Unequip Weapon Mods And Attachments When Selling Or Disassembling', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9604' },
+          { label: 'Item Modification Unlocker', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9449' },
+          { label: 'First Person Camera - Custom Weapons, Vehicles, On Foot Views and FOV', url: 'https://www.nexusmods.com/cyberpunk2077/mods/1786' },
+          { label: 'Only Smartweapon Crosshairs', url: 'https://www.nexusmods.com/cyberpunk2077/mods/5434' },
+          { label: 'Simple Flashlight', url: 'https://www.nexusmods.com/cyberpunk2077/mods/2913' },
+          { label: 'Custom Max Ammo - Fully customizable', url: 'https://www.nexusmods.com/cyberpunk2077/mods/8090' }
+        ]
+      },
+      {
+        titulo: 'Correções',
+        mods: [
+          { label: 'Fix Skill Progression Rewards Not Applying', url: 'https://www.nexusmods.com/cyberpunk2077/mods/9879' }
+        ]
+      }
     ]
   },
   {
@@ -220,9 +270,59 @@ export const MODPACKS: Modpack[] = [
   },
   {
     jogo: 'Baldur\'s Gate 3',
-    descricao: 'Lista de mods.',
+    descricao: 'Mods usados na série, com o motivo de cada um e a config de controle.',
     imagemUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202308/1519/95cce955dc59d04e2ea5ab624a823ace14e9c5f7e24dfb8f.png',
-    itens: [{ label: 'Ver lista de mods', url: 'https://docs.google.com/spreadsheets/d/1dpdtZltwN9XlSG3pYF6FD6oDrW82F0p1BI60IdvC0A4/edit?gid=0#gid=0' }]
+    itens: [],
+    grupos: [
+      {
+        titulo: 'Requisitos (instale primeiro)',
+        mods: [
+          { label: 'Script Extender', url: 'https://github.com/Norbyte/bg3se/releases', descricao: 'Requerimento básico pra um monte de mod.' },
+          { label: 'Mod Fixer', url: 'https://www.nexusmods.com/baldursgate3/mods/141', descricao: 'Requerimento básico pra um monte de mod.' }
+        ]
+      },
+      {
+        titulo: 'Câmera, interface e qualidade de vida',
+        mods: [
+          { label: 'BG3 Native Camera Tweaks', url: 'https://www.nexusmods.com/baldursgate3/mods/945', descricao: 'Destrava o eixo vertical da câmera e habilita um monte de configuração extra dela, indispensável pra quem joga no controle.' },
+          { label: 'No Camera Move', url: 'https://www.nexusmods.com/baldursgate3/mods/5046', descricao: 'Evita que a câmera mexa sozinha ou volte pro personagem ao realizar um ataque à distância. (pulta q o pariu q diferença isso faz)' },
+          { label: 'Visible Shields', url: 'https://www.nexusmods.com/baldursgate3/mods/492', descricao: 'Escudos aparecem nas costas dos personagens fora de batalha.' },
+          { label: 'Rich Traders', url: 'https://www.nexusmods.com/baldursgate3/mods/2432', descricao: 'Vendedores têm 50k de gold a mais. (só é possível roubar os valores que passam de 50k)' },
+          { label: 'Clear Map, Transparent Shroud', url: 'https://www.nexusmods.com/baldursgate3/mods/2256?tab=files&file_id=32241', descricao: 'Limpa a grade do mapa e deixa as partes não exploradas visíveis.' },
+          { label: 'ICUI - Lower Right Corner', url: 'https://www.nexusmods.com/baldursgate3/mods/4925?tab=files&file_id=33194', descricao: 'Remove as informações de classe do personagem no canto da tela. (na interface de controle)' },
+          { label: 'ICUI - Party Portrait', url: 'https://www.nexusmods.com/baldursgate3/mods/4925?tab=files&file_id=33195', descricao: 'Remove as fotinhas dos personagens do canto da tela. (na interface de controle)' }
+        ]
+      },
+      {
+        titulo: 'Transmog e aparência',
+        mods: [
+          { label: 'Transmog Enhanced', url: 'https://www.nexusmods.com/baldursgate3/mods/2922?tab=files&file_id=40671', descricao: 'Sistema de transmog básico.' },
+          { label: 'TE Hide Appearance Ring', url: 'https://www.nexusmods.com/baldursgate3/mods/2922?tab=files&file_id=21033', descricao: 'Complemento pro mod de transmog q adiciona um anel pra esconder itens.' },
+          { label: 'Everybody Dyes', url: 'https://www.nexusmods.com/baldursgate3/mods/936', descricao: 'Tintas não são gastas ao serem usadas.' }
+        ]
+      },
+      {
+        titulo: 'NG+ e testes de build',
+        mods: [
+          { label: 'Save Restore Stash', url: 'https://www.nexusmods.com/baldursgate3/mods/4958', descricao: 'O mais perto q consegui chegar de um mod de NG+, ele salva os itens equipados do grupo em um arquivo e vc pode pegar esses itens em outro save.' },
+          { label: 'Party Limit Begone', url: 'https://www.nexusmods.com/baldursgate3/mods/327', descricao: 'Remove o limite de tamanho do grupo, eu usei pra facilitar a passagem de itens de um save pra outro, não recomendo usar fora, grupo grande fode com o FPS.' },
+          { label: 'Level 12 on Beach', url: 'https://www.nexusmods.com/baldursgate3/mods/4258', descricao: 'N achei mod q carregasse minha progressão completa pra outro save, nv12 na praia é o mais perto q consigo chegar.' },
+          { label: 'Ring of Extra Health', url: 'https://www.nexusmods.com/baldursgate3/mods/1170', descricao: 'Um anel q dá 5k de HP, eu uso pra criar \'target dummies\' no acampamento usando hirelings e ficar testando builds.' },
+          { label: 'Tutorial Chest Summoning', url: 'https://www.nexusmods.com/baldursgate3/mods/457', descricao: 'Usei pra spawnar o anel de 5k de vida pros dummies de acampamento. Inútil além disso.' }
+        ]
+      }
+    ],
+    notas: [
+      {
+        titulo: '🎮 Minha config de controle',
+        texto: 'Copie e cole o código abaixo no seu arquivo "inputconfig_p1.json", localizado em:\nC:\\Users\\XXXXX\\AppData\\Local\\Larian Studios\\Baldur\'s Gate 3\\PlayerProfiles\\Public (XXXXX = nome do usuário)\n\nIsso permite vc atacar diretamente com o analógico direito, ver cones de visão e itens na tela com LB/L1 e pular diálogos com B/O pra n clicar em opções sem querer.',
+        codigo: '{\n  DestructionToggle: [ "c:rightstickpress" ],\n  UISkipDialog : [ "c:b" ],\n  ToggleSpellsEnd: [],\n  ShowWorldTooltips: [ "c:leftshoulder" ],\n  ShowSneakCones: [ "c:leftshoulder" ]\n}'
+      },
+      {
+        titulo: '❓ Por que não jogar normalmente pra gente ver a dificuldade do jogo?',
+        texto: 'A dificuldade tactician e o ritmo natural do jogo é maravilhoso, mas BG3 é um jogo extremamente lento e meticuloso, algumas batalhas levam HORAS e pra se preparar pegando tudo e explorando cada canto são ainda MAIS horas, a minha primeira run durou mais de 200, eu queria muito jogar a história em live mas existe 0 chances d\'eu jogar nesse ritmo, por outro lado eu amo NG+ em jogos, eu tenho apego por tudo que eu peguei ao longo do jogo e quero fazer uma run mais tranquila, experimental, sem me preocupar com farm, XP, fazendo uso de builds diferentes e criativas, o resultado disso é um gameplay que flui mais em lives. Sim, o ato 1 e 2 vão ser DESTRUÍDOS, mas isso quer dizer que as 150 horas que passei neles na primeira run vão ser resumidos em 15-20hrs. (espero eu)\n\nE vale lembrar que assim que eu chegar no ato 3 (onde vc atinge lv12 em poucas horas e pode pegar basicamente qualquer item end-game poderoso) o balanceamento volta ao normal e vc vai poder ter uma noção do que o gameplay seria em um jogo sem mod.'
+      }
+    ]
   },
   {
     jogo: 'Skyrim',
@@ -287,7 +387,7 @@ export const MODPACKS: Modpack[] = [
   },
   {
     jogo: 'Fallout 76',
-    descricao: 'Mods usados na série, mais um ajuste de configuração (Engine.ini).',
+    descricao: 'Mods usados na série, mais um ajuste de configuração (Fallout76Custom.ini).',
     imagemUrl: 'https://cms-assets.xboxservices.com/assets/d9/2d/d92d2967-799a-48f8-941c-9d88ca6dcb5c.jpg?n=Fallout-76-Burning-Springs_Sneaky-Slider-1084_1600x675.jpg',
     itens: [
       { label: 'Keretus\' Improved Health Bars', url: 'https://www.nexusmods.com/fallout76/mods/2966' },
@@ -295,13 +395,29 @@ export const MODPACKS: Modpack[] = [
       { label: 'Hide - Disable Jetpack Visuals', url: 'https://www.nexusmods.com/fallout76/mods/2871' },
       { label: 'Clear descriptions and scrap names (desatualizado)', url: 'https://www.nexusmods.com/fallout76/mods/1814' }
     ],
-    configuracao: '[EnlightenDebug]\nfSkyCubemapMaxVisibility=0.30\nfSkyCubemapMinVisibility=0.20'
+    notas: [
+      {
+        titulo: '⚙️ Como aplicar as linhas de configuração (só PC)',
+        passos: [
+          'Feche o jogo. Os arquivos .ini só devem ser mexidos com o Fallout 76 fechado.',
+          'Abra a pasta Documentos > My Games > Fallout 76.',
+          'Procure o arquivo Fallout76Custom.ini (Steam) ou Project76Custom.ini (Xbox / Microsoft Store). Se ele já existir, pule direto para o passo 6.',
+          'Se não existir: copie o Fallout76.ini (ou Project76.ini) e cole na mesma pasta. Abra a cópia, apague tudo (Ctrl+A e Delete) e salve, deixando o arquivo vazio.',
+          'Renomeie a cópia trocando o "- Copia" por "Custom", sem mexer no começo do nome: fica Fallout76Custom.ini (ou Project76Custom.ini).',
+          'Abra o arquivo Custom, clique em "Copiar" abaixo, cole as linhas no final do arquivo e salve.',
+          'Pronto, é só abrir o jogo. Para desfazer, apague essas linhas do arquivo Custom.'
+        ],
+        dica: 'Se os arquivos aparecem sem o ".ini" no nome, ative "Exibir > Extensões de nomes de arquivos" no Explorador. Senão o arquivo pode virar Fallout76Custom.ini.txt e o jogo ignora. Se o seu Custom já tiver a linha [EnlightenDebug], cole só as duas linhas de baixo embaixo dela.',
+        codigo: '[EnlightenDebug]\nfSkyCubemapMaxVisibility=0.30\nfSkyCubemapMinVisibility=0.20'
+      }
+    ]
   },
   {
     jogo: 'Dragon\'s Dogma 2',
     descricao: 'Mods de interface e balanceamento.',
     imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2054970/capsule_616x353.jpg',
     itens: [
+      { label: 'Clear Effect Descriptions (atualizado por um fã)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/1619' },
       { label: 'Clear Effect Descriptions (desatualizado)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/314' },
       { label: 'End-Game Stats for All Dragonforged Equipment (desatualizado)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/410' }
     ]
@@ -328,7 +444,7 @@ export const MODPACKS: Modpack[] = [
   {
     jogo: 'Resident Evil Requiem',
     descricao: 'Mod que substitui os ícones do inventário por imagens dos modelos 3D. Requer Fluffy Mod Manager.',
-    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/capsule_616x353.jpg',
+    imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/ce5437442768e38eb575f205ab9397d0264017b0/header.jpg',
     itens: [
       { label: '3D Icons', url: 'https://www.nexusmods.com/residentevilrequiem/mods/1049' }
     ]
