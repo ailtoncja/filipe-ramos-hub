@@ -39,4 +39,6 @@ export interface Modpack {
   grupos?: GrupoDeMods[];
   notas?: NotaDeMods[];
   lives?: LivesDoJogo;
+  /** Vídeos editados do canal oficial (não são lives). */
+  videosOficiais?: LivesDoJogo;
 }
