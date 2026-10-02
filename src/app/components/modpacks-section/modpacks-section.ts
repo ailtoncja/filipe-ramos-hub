@@ -10,6 +10,7 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { LIVES } from '../../data/lives.data';
 import { MODPACKS } from '../../data/modpacks.data';
+import { VIDEOS_OFICIAIS } from '../../data/videos-oficiais.data';
 import { FonteDeLives, GrupoDeMods, Modpack, ModpackItem } from '../../models/modpack.model';
 
 interface TipoItem {
@@ -49,10 +50,13 @@ function tiposDoModpack(modpack: Modpack): Set<string> {
   if (modpack.lives) {
     tipos.add(FILTRO_LIVES.chave);
   }
+  if (modpack.videosOficiais) {
+    tipos.add('video');
+  }
   return tipos;
 }
 
-type Aba = 'mods' | 'lives';
+type Aba = 'mods' | 'lives' | 'videos';
 
 /**
  * Link com playlist vira o player da playlist, começando no vídeo do link (watch?v=...&list=...)
@@ -106,13 +110,19 @@ function urlDoPlayerYoutube(url: string): string | null {
 const TODOS_OS_MODPACKS: Modpack[] = MODPACKS.map((modpack) => ({
   ...modpack,
   lives: LIVES[modpack.jogo] ?? modpack.lives,
+  videosOficiais: VIDEOS_OFICIAIS[modpack.jogo] ?? modpack.videosOficiais,
 })).sort((a, b) => a.jogo.localeCompare(b.jogo, 'pt-BR'));
 
 if (isDevMode()) {
-  // Avisa se algum nome em lives.data.ts não bate com um jogo (a live ficaria escondida).
+  // Avisa se algum nome em lives.data.ts / videos-oficiais.data.ts não bate com um jogo (ficaria escondido).
   const jogos = new Set(MODPACKS.map((modpack) => modpack.jogo));
-  for (const jogo of Object.keys(LIVES).filter((jogo) => !jogos.has(jogo))) {
-    console.warn(`lives.data.ts: "${jogo}" não corresponde a nenhum jogo em modpacks.data.ts`);
+  for (const [arquivo, mapa] of [
+    ['lives.data.ts', LIVES],
+    ['videos-oficiais.data.ts', VIDEOS_OFICIAIS],
+  ] as const) {
+    for (const jogo of Object.keys(mapa).filter((jogo) => !jogos.has(jogo))) {
+      console.warn(`${arquivo}: "${jogo}" não corresponde a nenhum jogo em modpacks.data.ts`);
+    }
   }
 }
 
@@ -170,19 +180,30 @@ export class ModpacksSection {
         links.push(item);
       }
     }
-    const lives: { fonte: FonteDeLives; player: SafeResourceUrl }[] = [];
-    for (const fonte of modpack.lives?.fontes ?? []) {
-      const player = urlDoPlayerDeLive(fonte.url);
-      if (player) {
-        lives.push({ fonte, player: this.sanitizer.bypassSecurityTrustResourceUrl(player) });
-      }
-    }
-    return { modpack, videos, links, lives };
+    const comPlayer = (fontes: FonteDeLives[] = []) =>
+      fontes.flatMap((fonte) => {
+        const player = urlDoPlayerDeLive(fonte.url);
+        return player
+          ? [{ fonte, player: this.sanitizer.bypassSecurityTrustResourceUrl(player) }]
+          : [];
+      });
+    return {
+      modpack,
+      videos,
+      links,
+      lives: comPlayer(modpack.lives?.fontes),
+      videosOficiais: comPlayer(modpack.videosOficiais?.fontes),
+    };
   });
 
   protected readonly abaAtiva = signal<Aba>('mods');
-  /** Qual fonte de lives está no player, quando o jogo tem mais de uma. */
-  protected readonly liveSelecionada = signal(0);
+  /** Qual fonte (de lives ou de vídeos) está no player, quando a aba tem mais de uma. */
+  protected readonly fonteSelecionada = signal(0);
+
+  protected trocarAba(aba: Aba): void {
+    this.abaAtiva.set(aba);
+    this.fonteSelecionada.set(0);
+  }
 
   protected readonly iconeParaItem = (label: string) => tipoDoItem(label).icone;
   protected readonly ehDesatualizado = (label: string) => PADRAO_DESATUALIZADO.test(label);
@@ -204,8 +225,7 @@ export class ModpacksSection {
   }
 
   protected abrirMods(modpack: Modpack, aba: Aba = 'mods'): void {
-    this.abaAtiva.set(aba);
-    this.liveSelecionada.set(0);
+    this.trocarAba(aba);
     this.modpackAberto.set(modpack);
     this.dialogoMods().nativeElement.showModal();
   }

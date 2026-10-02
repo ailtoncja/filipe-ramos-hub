@@ -97,23 +97,33 @@
             </h3>
           </div>
           <div class="flex flex-1 flex-col p-5">
-            @if (modpack.lives) {
-              <button
-                type="button"
-                (click)="abrirMods(modpack, 'lives')"
-                class="-mt-2 mb-2 inline-flex items-center gap-1.5 self-start text-xs text-zinc-500 transition hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400"
-              >
-                <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                Ver lives
-              </button>
-            } @else {
-              <span
-                class="-mt-2 mb-2 inline-flex items-center gap-1.5 self-start text-xs text-zinc-400 dark:text-zinc-500"
-              >
-                <span class="h-1.5 w-1.5 rounded-full border border-zinc-400 dark:border-zinc-500"></span>
-                Sem lives
-              </span>
-            }
+            <div class="-mt-2 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              @if (modpack.lives) {
+                <button
+                  type="button"
+                  (click)="abrirMods(modpack, 'lives')"
+                  class="inline-flex items-center gap-1.5 text-zinc-500 transition hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400"
+                >
+                  <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                  Ver lives
+                </button>
+              } @else {
+                <span class="inline-flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
+                  <span class="h-1.5 w-1.5 rounded-full border border-zinc-400 dark:border-zinc-500"></span>
+                  Sem lives
+                </span>
+              }
+              @if (modpack.videosOficiais) {
+                <button
+                  type="button"
+                  (click)="abrirMods(modpack, 'videos')"
+                  class="inline-flex items-center gap-1.5 text-zinc-500 transition hover:text-fuchsia-500 dark:text-zinc-400 dark:hover:text-fuchsia-400"
+                >
+                  <span class="text-[8px] leading-none text-fuchsia-500">▶</span>
+                  Ver vídeos
+                </button>
+              }
+            </div>
             <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ modpack.descricao }}</p>
             <div class="mt-4 flex flex-1 flex-col justify-end">
               <button
@@ -156,13 +166,13 @@
           </button>
         </header>
 
-        @if (conteudo.lives.length) {
+        @if (conteudo.lives.length || conteudo.videosOficiais.length) {
           <nav class="flex gap-1 border-b border-zinc-200 px-6 dark:border-zinc-800" role="tablist">
             <button
               type="button"
               role="tab"
               [attr.aria-selected]="abaAtiva() === 'mods'"
-              (click)="abaAtiva.set('mods')"
+              (click)="trocarAba('mods')"
               class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
               [class]="
                 abaAtiva() === 'mods'
@@ -172,52 +182,85 @@
             >
               📦 Mods
             </button>
-            <button
-              type="button"
-              role="tab"
-              [attr.aria-selected]="abaAtiva() === 'lives'"
-              (click)="abaAtiva.set('lives')"
-              class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
-              [class]="
-                abaAtiva() === 'lives'
-                  ? 'border-red-500 text-red-600 dark:text-red-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-              "
-            >
-              🔴 Lives
-            </button>
+            @if (conteudo.lives.length) {
+              <button
+                type="button"
+                role="tab"
+                [attr.aria-selected]="abaAtiva() === 'lives'"
+                (click)="trocarAba('lives')"
+                class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
+                [class]="
+                  abaAtiva() === 'lives'
+                    ? 'border-red-500 text-red-600 dark:text-red-400'
+                    : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                "
+              >
+                🔴 Lives
+              </button>
+            }
+            @if (conteudo.videosOficiais.length) {
+              <button
+                type="button"
+                role="tab"
+                [attr.aria-selected]="abaAtiva() === 'videos'"
+                (click)="trocarAba('videos')"
+                class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
+                [class]="
+                  abaAtiva() === 'videos'
+                    ? 'border-fuchsia-500 text-fuchsia-600 dark:text-fuchsia-400'
+                    : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                "
+              >
+                🎬 Vídeos
+              </button>
+            }
           </nav>
         }
 
         <div class="space-y-6 overflow-y-auto px-6 py-5">
-          @if (abaAtiva() === 'lives' && conteudo.lives.length) {
-            @let live = conteudo.lives[liveSelecionada()] ?? conteudo.lives[0];
-            @let ehPlaylist = live.fonte.url.includes('list=');
+          @if (
+            (abaAtiva() === 'lives' && conteudo.lives.length) ||
+            (abaAtiva() === 'videos' && conteudo.videosOficiais.length)
+          ) {
+            @let ehLives = abaAtiva() === 'lives';
+            @let fontes = ehLives ? conteudo.lives : conteudo.videosOficiais;
+            @let atual = fontes[fonteSelecionada()] ?? fontes[0];
+            @let ehPlaylist = atual.fonte.url.includes('list=');
+            @let aviso = ehLives ? modpack.lives?.aviso : modpack.videosOficiais?.aviso;
             <section>
-              @if (conteudo.lives.length > 1) {
+              @if (fontes.length > 1) {
                 <div class="mb-3 flex flex-wrap gap-2">
-                  @for (opcao of conteudo.lives; track opcao.fonte.url; let i = $index) {
+                  @for (opcao of fontes; track opcao.fonte.url; let i = $index) {
                     <button
                       type="button"
-                      (click)="liveSelecionada.set(i)"
+                      (click)="fonteSelecionada.set(i)"
                       class="rounded-full border px-3 py-1 text-xs font-semibold transition"
                       [class]="
-                        liveSelecionada() === i
-                          ? 'border-red-500 bg-red-600 text-white'
-                          : 'border-zinc-300 text-zinc-600 hover:border-red-400 hover:text-red-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-red-400'
+                        fonteSelecionada() === i
+                          ? ehLives
+                            ? 'border-red-500 bg-red-600 text-white'
+                            : 'border-fuchsia-500 bg-fuchsia-600 text-white'
+                          : 'border-zinc-300 text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-white'
                       "
                     >
                       {{ opcao.fonte.titulo ?? opcao.fonte.canal }}
                     </button>
                   }
                 </div>
+              } @else if (atual.fonte.titulo) {
+                <h4
+                  class="mb-2 text-xs font-bold uppercase tracking-wider"
+                  [class]="ehLives ? 'text-red-600 dark:text-red-400' : 'text-fuchsia-600 dark:text-fuchsia-400'"
+                >
+                  {{ atual.fonte.titulo }}
+                </h4>
               }
               <div
                 class="aspect-video overflow-hidden rounded-xl border border-zinc-200 bg-black dark:border-zinc-800"
               >
                 <iframe
-                  [src]="live.player"
-                  [title]="'Lives de ' + modpack.jogo"
+                  [src]="atual.player"
+                  [title]="(ehLives ? 'Lives de ' : 'Vídeos de ') + modpack.jogo"
                   class="h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerpolicy="strict-origin-when-cross-origin"
@@ -227,16 +270,17 @@
               <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
                 <p class="text-zinc-500 dark:text-zinc-400">
                   @if (ehPlaylist) {
-                    Use o ícone de lista no canto do player para escolher a live.
+                    Use o ícone de lista no canto do player para escolher
+                    {{ ehLives ? 'a live' : 'o vídeo' }}.
                   }
                   {{ ehPlaylist ? 'Playlist' : 'Vídeo' }} do canal
                   <span class="font-semibold text-zinc-700 dark:text-zinc-200">{{
-                    live.fonte.canal
+                    atual.fonte.canal
                   }}</span
                   >.
                 </p>
                 <a
-                  [href]="live.fonte.url"
+                  [href]="atual.fonte.url"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-500"
@@ -244,22 +288,24 @@
                   ▶ Abrir no YouTube
                 </a>
               </div>
-              @if (modpack.lives?.aviso) {
+              @if (aviso) {
                 <p
                   class="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300"
                 >
-                  💡 {{ modpack.lives?.aviso }}
+                  💡 {{ aviso }}
                 </p>
               }
-              <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-                Obs: não achou o que precisava nessas lives? Procure nos
-                <a
-                  href="#canais"
-                  (click)="fecharMods()"
-                  class="font-semibold text-violet-600 underline-offset-2 hover:underline dark:text-violet-400"
-                  >canais mais acima</a
-                >.
-              </p>
+              @if (ehLives) {
+                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+                  Obs: não achou o que precisava nessas lives? Procure nos
+                  <a
+                    href="#canais"
+                    (click)="fecharMods()"
+                    class="font-semibold text-violet-600 underline-offset-2 hover:underline dark:text-violet-400"
+                    >canais mais acima</a
+                  >.
+                </p>
+              }
             </section>
           } @else {
             @for (video of conteudo.videos; track video.label) {
