@@ -1,54 +1,21 @@
-<header class="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-violet-500/20 dark:bg-[#0b0a12]/80">
-  <div class="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3.5 sm:px-6 lg:px-10 xl:px-16">
-    <a href="#topo" class="flex items-center gap-2.5">
-      <img
-        src="https://yt3.googleusercontent.com/6Xp6EWdRKEGrSrhlfDeRM84TLhYPrZafguFDiDrO9NPd1pp5M_DQ3SzcaTv7FPn0OEaJ3bWwvUk=s900-c-k-c0x00ffffff-no-rj"
-        alt="Filipe Ramos"
-        class="h-9 w-9 rounded-lg object-cover shadow-[0_0_20px_-4px] shadow-violet-500/60"
-      />
-      <span class="font-display text-lg font-semibold tracking-wide text-zinc-900 dark:text-white">
-        FILIPE RAMOS
-      </span>
+<header class="site-header">
+  <div class="header-inner">
+    <a href="#topo" class="header-brand" aria-label="Filipe Ramos Hub, início">
+      <img src="https://yt3.googleusercontent.com/6Xp6EWdRKEGrSrhlfDeRM84TLhYPrZafguFDiDrO9NPd1pp5M_DQ3SzcaTv7FPn0OEaJ3bWwvUk=s900-c-k-c0x00ffffff-no-rj" alt="" />
+      <span>FILIPE RAMOS <small>HUB</small></span>
     </a>
-
-    <nav class="hidden items-center gap-1 text-sm font-medium sm:flex">
-      <a href="#buscar-videos" class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400">Buscar vídeos</a>
-      <a
-        href="#canais"
-        class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400"
-      >
-        Glossário de Canais
-      </a>
-      <a
-        href="#lives-avulsas"
-        class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400"
-      >
-        Lives Avulsas
-      </a>
-      <a
-        href="#playlist"
-        class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400"
-      >
-        Playlist
-      </a>
-      <a
-        href="#care-packages"
-        class="rounded-md px-3 py-1.5 text-zinc-600 transition hover:bg-violet-500/10 hover:text-violet-600 dark:text-zinc-300 dark:hover:text-violet-400"
-      >
-        Care Packages
-      </a>
+    <nav class="header-nav" aria-label="Navegação principal">
+      <a href="#buscar-videos">Vídeos</a>
+      <a href="#canais">Canais</a>
+      <a href="#lives-avulsas">Lives avulsas</a>
+      <a href="#playlist">Playlist</a>
+      <a href="#care-packages">Care Packages</a>
     </nav>
-
-    <button
-      type="button"
-      (click)="toggleTheme()"
-      class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-violet-400 hover:text-violet-600 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-violet-500 dark:hover:text-violet-400"
-      [attr.aria-label]="isDark() ? 'Ativar tema claro' : 'Ativar tema escuro'"
-    >
+    <button type="button" (click)="toggleTheme()" class="theme-switch" [attr.aria-label]="isDark() ? 'Ativar tema claro' : 'Ativar tema escuro'">
       @if (isDark()) {
-        <span aria-hidden="true">☀️</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
       } @else {
-        <span aria-hidden="true">🌙</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.5 14.3A8.5 8.5 0 0 1 9.7 3.5 8.5 8.5 0 1 0 20.5 14.3Z"/></svg>
       }
     </button>
   </div>
