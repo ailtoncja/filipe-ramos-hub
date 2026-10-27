@@ -64,7 +64,10 @@ type Aba = 'mods' | 'lives' | 'videos';
  */
 function urlDoPlayerDeLive(url: string): string | null {
   try {
-    const params = new URL(url).searchParams;
+    const link = new URL(url);
+    const host = link.hostname.replace(/^www\./, '');
+    if (link.protocol !== 'https:' || (host !== 'youtube.com' && host !== 'youtu.be')) return null;
+    const params = link.searchParams;
     const lista = params.get('list');
     if (lista) {
       const video = params.get('v');
@@ -93,6 +96,7 @@ function urlDoPlayerYoutube(url: string): string | null {
   } catch {
     return null;
   }
+  if (link.protocol !== 'https:') return null;
   const host = link.hostname.replace(/^www\./, '');
   const id =
     host === 'youtu.be'

@@ -7,8 +7,8 @@ const blocks = [...source.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*
 if (!blocks.length) throw new Error('Nenhuma fonte encontrada em canais.data.ts.');
 const api = async (endpoint, params) => {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${endpoint}`);
-  Object.entries({ ...params, key }).forEach(([k, v]) => url.searchParams.set(k, v));
-  const response = await fetch(url);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const response = await fetch(url, { headers: { 'x-goog-api-key': key } });
   const body = await response.json();
   if (!response.ok) throw new Error(`YouTube ${endpoint}: ${body.error?.message ?? response.status}`);
   return body;
