@@ -1,73 +1,70 @@
-# Site
+# Filipe Ramos Hub
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.2.
+Um ponto de encontro feito por fãs para reunir conteúdo do Filipe Ramos e dos canais que ajudam a preservar suas lives, vídeos e cortes. O projeto facilita a descoberta desse conteúdo e organiza materiais relacionados aos jogos em um só lugar.
 
-## Development server
+> Este é um projeto de fãs e não possui afiliação oficial com Filipe Ramos.
 
-To start a local development server, run:
+## O que você encontra aqui
 
-```bash
-ng serve
-```
+- **Busca de vídeos:** pesquise títulos e descrições dos vídeos das fontes cadastradas, filtre por canal e ordene por data ou número de visualizações. Os resultados levam ao YouTube.
+- **Glossário de canais:** encontre canais oficiais e canais da comunidade que preservam lives e cortes.
+- **Lives avulsas:** acesse transmissões individuais reunidas pela comunidade.
+- **Playlist:** ouça a playlist do Spotify usada nas lives.
+- **Care Packages:** encontre materiais por jogo, incluindo mods, downloads, mapas, tutoriais e, quando disponíveis, lives e vídeos oficiais.
+- **Temas claro e escuro:** escolha sua preferência, que fica salva no navegador.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Como executar
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Você precisa do Node.js e do npm instalados. O projeto utiliza Node.js 24 na automação.
 
 ```bash
-ng generate --help
+npm ci
+npm start
 ```
 
-## Building
+Abra [http://localhost:4200](http://localhost:4200). O site atualiza automaticamente durante o desenvolvimento.
 
-To build the project run:
+Para compilar ou executar os testes:
 
 ```bash
-ng build
+npm run build
+npm test -- --watch=false
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+O site é construído com **Angular**, **TypeScript** e **Tailwind CSS**.
 
-## Running unit tests
+## Como o catálogo de vídeos funciona
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+A busca usa o arquivo `public/data/videos.json`. Ele é gerado a partir das fontes listadas em `src/app/data/canais.data.ts`: para canais, o script consulta a playlist de uploads; quando a fonte cadastrada é uma playlist, ele consulta apenas os vídeos dessa playlist.
 
-```bash
-ng test
+A pesquisa considera títulos e descrições, sem diferenciar maiúsculas ou acentos. As visualizações refletem a última atualização do catálogo. Vídeos privados, removidos ou indisponíveis podem não aparecer; a contagem de visualizações pode não estar disponível para todos os vídeos.
+
+### Atualização manual
+
+Para gerar o catálogo, crie uma chave para a [YouTube Data API v3](https://developers.google.com/youtube/v3/getting-started) e restrinja seu uso à API. No PowerShell, dentro da pasta do projeto:
+
+```powershell
+$env:YOUTUBE_API_KEY = 'SUA_CHAVE'
+npm run atualizar-videos
 ```
 
-## Running end-to-end tests
+A variável vale para a sessão atual do PowerShell. Não coloque a chave nos arquivos do projeto nem a compartilhe publicamente. Se alguma fonte ou requisição falhar, o script preserva o catálogo anterior.
 
-For end-to-end (e2e) testing, run:
+### Atualização automática
 
-```bash
-ng e2e
-```
+O workflow **Atualizar catálogo de vídeos** roda diariamente, pode ser iniciado manualmente na aba Actions e também é executado quando o script de atualização é alterado. Para configurá-lo:
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+1. No GitHub, adicione a chave como segredo de repositório com o nome `YOUTUBE_API_KEY`.
+2. Permita que o workflow grave no repositório e verifique se as regras da branch permitem o envio do catálogo.
+3. Execute o workflow manualmente uma vez e confira o resultado na aba **Actions**.
+4. Garanta que a hospedagem publique as atualizações do repositório.
 
-## Additional Resources
+O workflow **Verificação** executa a auditoria de dependências, a compilação e os testes em pushes e pull requests. O Dependabot também verifica atualizações de dependências e das GitHub Actions semanalmente.
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Organização do projeto
 
-## Busca de vídeos
-
-A busca usa `public/data/videos.json`, gerado a partir das fontes cadastradas em `src/app/data/canais.data.ts`. Os canais são percorridos pela playlist de uploads; quando o endereço cadastrado é uma playlist, somente seus vídeos são incluídos. Cada resultado abre no YouTube. A pesquisa considera título e descrição, sem diferenciar maiúsculas ou acentos.
-
-Para preencher ou atualizar o catálogo:
-
-1. Crie um projeto no Google Cloud, ative a YouTube Data API v3 e gere uma chave de API. Consulte https://developers.google.com/youtube/v3/getting-started.
-2. No PowerShell, execute `$env:YOUTUBE_API_KEY = 'SUA_CHAVE'` e depois `npm run atualizar-videos`. Não salve a chave no código ou no repositório.
-3. Publique o arquivo `public/data/videos.json` gerado junto com o site.
-
-Para atualização diária pelo GitHub Actions, configure a chave no segredo `YOUTUBE_API_KEY` do repositório, habilite permissões de escrita para workflows e execute o workflow **Atualizar catálogo de vídeos** manualmente uma vez. Depois ele roda diariamente e envia o catálogo atualizado ao repositório. O deploy precisa acompanhar esses commits. Caso a configuração de proteção de branch impeça pushes, ajuste o fluxo de publicação de acordo com as regras do repositório.
-
-O script não substitui o catálogo anterior se alguma fonte ou requisição falhar. Confira os logs do workflow quando uma atualização falhar. A disponibilidade dos vídeos e os limites da API podem afetar os resultados.
+- `src/app/components/`: seções e componentes da interface.
+- `src/app/data/`: canais, lives, vídeos oficiais e materiais dos jogos.
+- `scripts/atualizar-videos.mjs`: coleta os dados para o catálogo de busca.
+- `public/data/videos.json`: catálogo utilizado pelo site.
+- `.github/`: workflows e configuração do Dependabot.
