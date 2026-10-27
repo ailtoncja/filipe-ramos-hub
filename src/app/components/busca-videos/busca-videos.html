@@ -1,46 +1,29 @@
-<section id="buscar-videos" class="border-t border-zinc-200 py-16 dark:border-violet-500/10">
-  <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10 xl:px-16">
-    <div class="mb-8 text-center">
-      <h2 class="font-display text-3xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-4xl">Buscar vídeos</h2>
-      <p class="mt-3 text-zinc-600 dark:text-zinc-400">Encontre vídeos e lives dos canais reunidos aqui, tudo em um só lugar.</p>
+<section id="buscar-videos" class="discover-section">
+  <div class="section-inner">
+    <div class="section-heading discover-heading">
+      <div><h2>Cadê aquela live<span>?</span></h2></div>
+      <p>De Bloodborne ao Fallout, procure vídeos e lives do Filipe pelos canais da comunidade.</p>
     </div>
-    <div class="mx-auto max-w-5xl">
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
-        <label class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Pesquisar vídeos
-          <input type="search" placeholder="Nome do jogo ou assunto" [value]="busca()" (input)="alterarBusca($event)" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 font-normal text-zinc-900 outline-none focus:ring-2 focus:ring-violet-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white" />
-        </label>
-        <label class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Canal
-          <select [value]="canal()" (change)="alterarCanal($event)" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 font-normal text-zinc-900 outline-none focus:ring-2 focus:ring-violet-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
-            <option value="">Todos os canais</option>
-            @for (item of canais; track item.nome) { <option [value]="item.nome">{{ item.nome }}</option> }
-          </select>
-        </label>
-        <label class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Ordenar por
-          <select [value]="ordem()" (change)="alterarOrdem($event)" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 font-normal text-zinc-900 outline-none focus:ring-2 focus:ring-violet-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
-            <option value="recentes">Mais recentes</option><option value="antigos">Mais antigos</option><option value="vistos">Mais vistos</option>
-          </select>
-        </label>
-      </div>
-      <div aria-live="polite" class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-        @if (erro()) { Não foi possível carregar os vídeos. Tente recarregar a página. }
-        @else if (!catalogo()) { Carregando vídeos... }
-        @else if (!catalogo()?.atualizadoEm) { O catálogo de vídeos ainda está sendo preparado. Volte em breve! }
-        @else { {{ resultados().length }} {{ resultados().length === 1 ? 'vídeo encontrado' : 'vídeos encontrados' }} · Atualizado em {{ catalogo()?.atualizadoEm | date:'dd/MM/yyyy' }} }
-      </div>
-      @if (catalogo()?.atualizadoEm && resultados().length === 0) {
-        <p class="py-10 text-center text-zinc-600 dark:text-zinc-400">Nenhum vídeo encontrado. Tente outro termo ou canal.</p>
-      }
-      <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        @for (video of visiveis(); track video.id) {
-          <a [href]="'https://www.youtube.com/watch?v=' + video.id" target="_blank" rel="noopener noreferrer" class="group overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-violet-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-zinc-800 dark:bg-white/[0.03]">
-            <div class="aspect-video overflow-hidden bg-zinc-900"><img [src]="video.miniatura" alt="" loading="lazy" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" /></div>
-            <div class="p-4"><h3 class="font-semibold text-zinc-900 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">{{ video.titulo }}</h3><p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{{ video.canal }}</p><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ video.publicadoEm | date:'dd/MM/yyyy' }} @if (video.visualizacoes != null) { · {{ formatarVisualizacoes(video.visualizacoes) }} visualizações } · Abrir no YouTube ↗</p></div>
-          </a>
-        }
-      </div>
-      @if (visiveis().length < resultados().length) {
-        <div class="mt-8 text-center"><button type="button" (click)="limite.set(limite() + 24)" class="rounded-lg border border-violet-500 px-5 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:text-violet-300">Mostrar mais vídeos</button></div>
+    <div class="search-panel">
+      <label class="search-field search-query"><span>Pesquisar vídeos</span><div><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input type="search" placeholder="Busque um jogo ou assunto..." [value]="busca()" (input)="alterarBusca($event)" /></div></label>
+      <label class="search-field"><span>Canal</span><select [value]="canal()" (change)="alterarCanal($event)"><option value="">Todos os canais</option>@for (item of canais; track item.nome) { <option [value]="item.nome">{{ item.nome }}</option> }</select></label>
+      <label class="search-field"><span>Ordenar por</span><select [value]="ordem()" (change)="alterarOrdem($event)"><option value="recentes">Mais recentes</option><option value="antigos">Mais antigos</option><option value="vistos">Mais vistos</option></select></label>
+    </div>
+    <div aria-live="polite" class="search-meta">
+      @if (erro()) { Não foi possível carregar os vídeos. Tente recarregar a página. }
+      @else if (!catalogo()) { Carregando vídeos... }
+      @else if (!catalogo()?.atualizadoEm) { O catálogo de vídeos ainda está sendo preparado. Volte em breve! }
+      @else { <strong>{{ resultados().length }} {{ resultados().length === 1 ? 'vídeo encontrado' : 'vídeos encontrados' }}</strong><span>Atualizado em {{ catalogo()?.atualizadoEm | date:'dd/MM/yyyy' }}</span> }
+    </div>
+    @if (catalogo()?.atualizadoEm && resultados().length === 0) { <p class="empty-results">Nenhum vídeo encontrado. Tente outro termo ou canal.</p> }
+    <div class="video-grid">
+      @for (video of visiveis(); track video.id) {
+        <a [href]="'https://www.youtube.com/watch?v=' + video.id" target="_blank" rel="noopener noreferrer" class="video-card">
+          <div class="video-image"><img [src]="video.miniatura" alt="" loading="lazy" /><span aria-hidden="true" class="video-play">▶</span></div>
+          <div class="video-info"><h3>{{ video.titulo }}</h3><p>{{ video.canal }}</p><span>{{ video.publicadoEm | date:'dd/MM/yyyy' }} @if (video.visualizacoes != null) { · {{ formatarVisualizacoes(video.visualizacoes) }} visualizações }</span></div>
+        </a>
       }
     </div>
+    @if (visiveis().length < resultados().length) { <div class="more-videos"><button type="button" (click)="limite.set(limite() + 24)">Mostrar mais vídeos <span aria-hidden="true">↓</span></button></div> }
   </div>
 </section>
