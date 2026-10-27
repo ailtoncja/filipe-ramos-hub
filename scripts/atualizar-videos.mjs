@@ -44,6 +44,16 @@ for (const [, name, link] of blocks) {
     token = result.nextPageToken;
   } while (token);
 }
+// Busca as visualizações em lotes de até 50 vídeos por requisição.
+const ids = [...videos.keys()];
+for (let i = 0; i < ids.length; i += 50) {
+  const result = await api('videos', { part: 'statistics', id: ids.slice(i, i + 50).join(',') });
+  for (const item of result.items ?? []) {
+    const video = videos.get(item.id);
+    const count = item.statistics?.viewCount;
+    if (video && count != null && Number.isSafeInteger(Number(count))) video.visualizacoes = Number(count);
+  }
+}
 const catalog = { atualizadoEm: new Date().toISOString(), videos: [...videos.values()].sort ( (a, b) => b.publicadoEm.localeCompare(a.publicadoEm)) };
 await writeFile(new URL('../public/data/videos.json', import.meta.url), JSON.stringify(catalog));
 console.log(`${catalog.videos.length} vídeos salvos.`);

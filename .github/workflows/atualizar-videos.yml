@@ -1,5 +1,8 @@
 name: Atualizar catálogo de vídeos
 on:
+  push:
+    paths:
+      - scripts/atualizar-videos.mjs
   workflow_dispatch:
   schedule:
     - cron: '17 7 * * *'
