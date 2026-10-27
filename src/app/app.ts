@@ -5,11 +5,12 @@ import { CanaisSection } from './components/canais-section/canais-section';
 import { LivesAvulsasSection } from './components/lives-avulsas-section/lives-avulsas-section';
 import { PlaylistSection } from './components/playlist-section/playlist-section';
 import { ModpacksSection } from './components/modpacks-section/modpacks-section';
+import { BuscaVideos } from './components/busca-videos/busca-videos';
 import { Footer } from './components/footer/footer';
 
 @Component({
   selector: 'app-root',
-  imports: [Header, StatsBar, CanaisSection, LivesAvulsasSection, PlaylistSection, ModpacksSection, Footer],
+  imports: [BuscaVideos, Header, StatsBar, CanaisSection, LivesAvulsasSection, PlaylistSection, ModpacksSection, Footer],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

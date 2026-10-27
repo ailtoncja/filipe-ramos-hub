@@ -57,3 +57,17 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Busca de vídeos
+
+A busca usa `public/data/videos.json`, gerado a partir das fontes cadastradas em `src/app/data/canais.data.ts`. Os canais são percorridos pela playlist de uploads; quando o endereço cadastrado é uma playlist, somente seus vídeos são incluídos. Cada resultado abre no YouTube. A pesquisa considera título e descrição, sem diferenciar maiúsculas ou acentos.
+
+Para preencher ou atualizar o catálogo:
+
+1. Crie um projeto no Google Cloud, ative a YouTube Data API v3 e gere uma chave de API. Consulte https://developers.google.com/youtube/v3/getting-started.
+2. No PowerShell, execute `$env:YOUTUBE_API_KEY = 'SUA_CHAVE'` e depois `npm run atualizar-videos`. Não salve a chave no código ou no repositório.
+3. Publique o arquivo `public/data/videos.json` gerado junto com o site.
+
+Para atualização diária pelo GitHub Actions, configure a chave no segredo `YOUTUBE_API_KEY` do repositório, habilite permissões de escrita para workflows e execute o workflow **Atualizar catálogo de vídeos** manualmente uma vez. Depois ele roda diariamente e envia o catálogo atualizado ao repositório. O deploy precisa acompanhar esses commits. Caso a configuração de proteção de branch impeça pushes, ajuste o fluxo de publicação de acordo com as regras do repositório.
+
+O script não substitui o catálogo anterior se alguma fonte ou requisição falhar. Confira os logs do workflow quando uma atualização falhar. A disponibilidade dos vídeos e os limites da API podem afetar os resultados.
