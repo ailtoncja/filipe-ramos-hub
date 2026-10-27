@@ -10,6 +10,7 @@ interface Video {
   fontes: string[];
   publicadoEm: string;
   miniatura: string;
+  visualizacoes?: number;
 }
 interface Catalogo { atualizadoEm: string | null; videos: Video[]; }
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -20,6 +21,7 @@ const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u
   templateUrl: './busca-videos.html',
 })
 export class BuscaVideos {
+  protected readonly formatarVisualizacoes = (valor: number) => new Intl.NumberFormat('pt-BR').format(valor);
   protected readonly canais = [...CANAIS].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   protected readonly busca = signal('');
   protected readonly canal = signal('');
@@ -33,9 +35,14 @@ export class BuscaVideos {
     return (this.catalogo()?.videos ?? []).filter((video) => {
       const texto = normalizar(`${video.titulo} ${video.descricao}`);
       return termos.every((termo) => texto.includes(termo)) && (!canal || video.fontes.includes(canal));
-    }).sort((a, b) => this.ordem() === 'antigos'
-      ? a.publicadoEm.localeCompare(b.publicadoEm)
-      : b.publicadoEm.localeCompare(a.publicadoEm));
+    }).sort((a, b) => {
+      if (this.ordem() === 'vistos') {
+        return (b.visualizacoes ?? -1) - (a.visualizacoes ?? -1) || b.publicadoEm.localeCompare(a.publicadoEm);
+      }
+      return this.ordem() === 'antigos'
+        ? a.publicadoEm.localeCompare(b.publicadoEm)
+        : b.publicadoEm.localeCompare(a.publicadoEm);
+    });
   });
   protected readonly visiveis = computed(() => this.resultados().slice(0, this.limite()));
 
