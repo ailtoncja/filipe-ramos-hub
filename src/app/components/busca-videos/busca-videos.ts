@@ -22,7 +22,8 @@ const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u
 })
 export class BuscaVideos {
   protected readonly formatarVisualizacoes = (valor: number) => new Intl.NumberFormat('pt-BR').format(valor);
-  protected readonly canais = [...CANAIS].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  protected readonly canais = [...CANAIS].sort((a, b) => a.nomeExibicao.localeCompare(b.nomeExibicao, 'pt-BR'));
+  protected readonly nomeDoCanal = (nome: string) => CANAIS.find((canal) => canal.nome === nome)?.nomeExibicao ?? nome;
   protected readonly busca = signal('');
   protected readonly canal = signal('');
   protected readonly ordem = signal('recentes');

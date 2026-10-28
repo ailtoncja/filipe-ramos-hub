@@ -6,7 +6,7 @@
     </div>
     <div class="search-panel">
       <label class="search-field search-query"><span>Pesquisar vídeos</span><div><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input type="search" placeholder="Busque um jogo ou assunto..." [value]="busca()" (input)="alterarBusca($event)" /></div></label>
-      <label class="search-field"><span>Canal</span><select [value]="canal()" (change)="alterarCanal($event)"><option value="">Todos os canais</option>@for (item of canais; track item.nome) { <option [value]="item.nome">{{ item.nome }}</option> }</select></label>
+      <label class="search-field"><span>Canal</span><select [value]="canal()" (change)="alterarCanal($event)"><option value="">Todos os canais</option>@for (item of canais; track item.nome) { <option [value]="item.nome">{{ item.nomeExibicao }}</option> }</select></label>
       <label class="search-field"><span>Ordenar por</span><select [value]="ordem()" (change)="alterarOrdem($event)"><option value="recentes">Mais recentes</option><option value="antigos">Mais antigos</option><option value="vistos">Mais vistos</option></select></label>
     </div>
     <div aria-live="polite" class="search-meta">
@@ -20,7 +20,7 @@
       @for (video of visiveis(); track video.id) {
         <a [href]="'https://www.youtube.com/watch?v=' + video.id" target="_blank" rel="noopener noreferrer" class="video-card">
           <div class="video-image"><img [src]="video.miniatura" alt="" loading="lazy" /><span aria-hidden="true" class="video-play">▶</span></div>
-          <div class="video-info"><h3>{{ video.titulo }}</h3><p>{{ video.canal }}</p><span>{{ video.publicadoEm | date:'dd/MM/yyyy' }} @if (video.visualizacoes != null) { · {{ formatarVisualizacoes(video.visualizacoes) }} visualizações }</span></div>
+          <div class="video-info"><h3>{{ video.titulo }}</h3><p>{{ nomeDoCanal(video.canal) }}</p><span>{{ video.publicadoEm | date:'dd/MM/yyyy' }} @if (video.visualizacoes != null) { · {{ formatarVisualizacoes(video.visualizacoes) }} visualizações }</span></div>
         </a>
       }
     </div>
