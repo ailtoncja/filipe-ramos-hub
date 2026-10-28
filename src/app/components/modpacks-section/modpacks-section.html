@@ -1,141 +1,45 @@
-<section id="care-packages" class="border-t border-zinc-200 py-16 dark:border-violet-500/10">
-  <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10 xl:px-16">
-    <div class="mb-12 section-heading section-heading-stacked">
-      <h2
-        class="font-display text-3xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-4xl"
-      >
-        Care Packages
-      </h2>
-      <p class="mt-3 text-zinc-600 dark:text-zinc-400">
-        Modpacks usados nas séries de cada jogo. Abra um jogo para ver os downloads, mods e
-        tutoriais.
-      </p>
-      <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
-        <a
-          href="https://drive.google.com/file/d/1mdY9ppbrtIQSj0OjOtdSkkYu-bItLn0A/view"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-600 transition hover:bg-violet-500/20 dark:text-violet-400"
-        >
-          📄 Ver lista oficial de mods (.txt)
-        </a>
-
-        <div class="relative">
-          <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
-            >🔍</span
-          >
-          <input
-            type="text"
-            placeholder="Buscar jogo..."
-            [value]="busca()"
-            (input)="onBuscaChange($event)"
-            class="w-56 rounded-full border border-zinc-300 bg-white py-2 pl-9 pr-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-500 dark:border-zinc-700 dark:bg-white/[0.05] dark:text-white dark:placeholder:text-zinc-500"
-          />
-        </div>
+<section id="care-packages" class="packages-section">
+  <div class="packages-container">
+    <div class="packages-intro">
+      <div>
+        <h2>Care Packages<span>.</span></h2>
+        <p>Mods, mapas, tutoriais e lives pra revisitar cada jogo do seu jeito.</p>
       </div>
-
-      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-        @for (tipo of filtrosDisponiveis; track tipo.chave) {
-          <button
-            type="button"
-            (click)="toggleFiltro(tipo.chave)"
-            class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-            [class]="
-              filtrosAtivos().has(tipo.chave)
-                ? 'border-violet-500 bg-violet-600 text-white'
-                : 'border-zinc-300 bg-transparent text-zinc-600 hover:border-violet-400 hover:text-violet-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-violet-500 dark:hover:text-violet-400'
-            "
-          >
-            {{ tipo.icone }} {{ tipo.label }}
-          </button>
-        }
-        @if (filtrosAtivos().size > 0) {
-          <button
-            type="button"
-            (click)="limparFiltros()"
-            class="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-500 underline-offset-2 hover:text-violet-600 hover:underline dark:text-zinc-400 dark:hover:text-violet-400"
-          >
-            ✕ Limpar filtros
-          </button>
-        }
-      </div>
+      <a href="https://drive.google.com/file/d/1mdY9ppbrtIQSj0OjOtdSkkYu-bItLn0A/view" target="_blank" rel="noopener noreferrer" class="official-list">Lista oficial de mods <span aria-hidden="true">↗</span></a>
     </div>
 
-    @if (modpacks().length === 0) {
-      <p class="py-12 text-center text-zinc-500 dark:text-zinc-400">
-        Nenhum jogo encontrado com esses filtros.
-      </p>
-    }
-
-    <div
-      class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    >
+    <div class="package-tools">
+      <label class="package-search">
+        <span>Buscar jogo</span>
+        <span class="package-search-input"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input type="search" placeholder="Qual jogo você procura?" [value]="busca()" (input)="onBuscaChange($event)" /></span>
+      </label>
+      <div class="package-filters"><span class="filter-label">Filtrar por conteúdo</span><div class="filter-list">
+        @for (tipo of filtrosDisponiveis; track tipo.chave) {
+          <button type="button" (click)="toggleFiltro(tipo.chave)" [attr.aria-pressed]="filtrosAtivos().has(tipo.chave)" class="filter-button" [class.is-active]="filtrosAtivos().has(tipo.chave)">{{ tipo.label }}</button>
+        }
+        @if (filtrosAtivos().size > 0) { <button type="button" (click)="limparFiltros()" class="clear-filters">Limpar filtros</button> }
+      </div></div>
+    </div>
+    <div class="package-results" aria-live="polite"><strong>{{ modpacks().length }} {{ modpacks().length === 1 ? 'jogo' : 'jogos' }}</strong><span>Escolha um jogo para explorar</span></div>
+    @if (modpacks().length === 0) { <p class="package-empty">Nenhum jogo encontrado. Tente outro nome ou filtro.</p> }
+    <div class="package-grid">
       @for (modpack of modpacks(); track modpack.jogo) {
-        <div
-          class="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:-translate-y-1 hover:border-violet-400 hover:shadow-[0_0_30px_-8px] hover:shadow-violet-500/50 dark:border-zinc-800 dark:bg-white/[0.03] dark:hover:border-violet-500/60"
-        >
-          <div class="relative aspect-video w-full overflow-hidden bg-zinc-900">
-            <!-- Fundo desfocado preenche as sobras quando a imagem não é 16:9 (capas quadradas, logos compridos). -->
-            <img
-              [src]="modpack.imagemUrl"
-              alt=""
-              aria-hidden="true"
-              class="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
-            />
-            <img
-              [src]="modpack.imagemUrl"
-              [alt]="modpack.jogo"
-              class="relative h-full w-full object-contain transition duration-300 group-hover:scale-105"
-            />
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"
-            ></div>
-            <h3
-              class="font-display absolute bottom-3 left-4 right-4 text-lg font-bold leading-tight text-white drop-shadow"
-            >
-              {{ modpack.jogo }}
-            </h3>
+        <article class="package-card">
+          <div class="package-cover">
+            <img [src]="modpack.imagemUrl" alt="" aria-hidden="true" class="package-cover-background" loading="lazy" />
+            <img [src]="modpack.imagemUrl" [alt]="modpack.jogo" class="package-cover-image" loading="lazy" />
           </div>
-          <div class="flex flex-1 flex-col p-5">
-            <div class="-mt-2 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-              @if (modpack.lives) {
-                <button
-                  type="button"
-                  (click)="abrirMods(modpack, 'lives')"
-                  class="inline-flex items-center gap-1.5 text-zinc-500 transition hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400"
-                >
-                  <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                  Ver lives
-                </button>
-              } @else {
-                <span class="inline-flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
-                  <span class="h-1.5 w-1.5 rounded-full border border-zinc-400 dark:border-zinc-500"></span>
-                  Sem lives
-                </span>
-              }
-              @if (modpack.videosOficiais) {
-                <button
-                  type="button"
-                  (click)="abrirMods(modpack, 'videos')"
-                  class="inline-flex items-center gap-1.5 text-zinc-500 transition hover:text-fuchsia-500 dark:text-zinc-400 dark:hover:text-fuchsia-400"
-                >
-                  <span class="text-[8px] leading-none text-fuchsia-500">▶</span>
-                  Ver vídeos
-                </button>
-              }
-            </div>
-            <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ modpack.descricao }}</p>
-            <div class="mt-4 flex flex-1 flex-col justify-end">
-              <button
-                type="button"
-                (click)="abrirMods(modpack)"
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-[0_0_20px_-6px] shadow-violet-500/70 transition hover:bg-violet-500"
-              >
-                🧩 {{ textoDoBotao(modpack) }}
-              </button>
+          <div class="package-card-body">
+            <h3>{{ modpack.jogo }}</h3><p>{{ modpack.descricao }}</p>
+            <div class="package-card-footer">
+              <button type="button" (click)="abrirMods(modpack)" class="package-open">Explorar conteúdo <span aria-hidden="true">↗</span></button>
+              <div class="package-quick-links">
+                @if (modpack.lives) { <button type="button" class="watch-lives" [attr.aria-label]="'Ver lives de ' + modpack.jogo" (click)="abrirMods(modpack, 'lives')"><span class="live-dot" aria-hidden="true"></span> Ver lives <span aria-hidden="true">↗</span></button> }
+                @if (modpack.videosOficiais) { <button type="button" [attr.aria-label]="'Ver vídeos de ' + modpack.jogo" (click)="abrirMods(modpack, 'videos')"><span class="video-dot" aria-hidden="true"></span> Vídeos</button> }
+              </div>
             </div>
           </div>
-        </div>
+        </article>
       }
     </div>
   </div>
@@ -144,80 +48,61 @@
     #dialogoMods
     (click)="onCliqueNoDialogo($event)"
     (close)="onDialogoFechado()"
-    class="m-auto w-[calc(100%-2rem)] max-w-2xl overflow-hidden rounded-2xl border border-zinc-200 bg-white p-0 text-zinc-900 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm dark:border-violet-500/30 dark:bg-[#13111c] dark:text-zinc-100"
+    class="package-dialog" aria-labelledby="package-dialog-title"
   >
     @if (conteudoAberto(); as conteudo) {
       @let modpack = conteudo.modpack;
-      <div class="flex max-h-[85vh] flex-col">
-        <header
-          class="flex items-start justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800"
-        >
-          <div>
-            <h3 class="font-display text-xl font-bold">{{ modpack.jogo }}</h3>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ modpack.descricao }}</p>
-          </div>
+      <div class="dialog-layout">
+        <header class="dialog-header">
+          <img [src]="modpack.imagemUrl" alt="" class="dialog-cover" />
+          <div class="dialog-title"><span>CARE PACKAGE</span><h3 id="package-dialog-title">{{ modpack.jogo }}</h3><p>{{ modpack.descricao }}</p></div>
           <button
             type="button"
             (click)="fecharMods()"
             aria-label="Fechar"
-            class="rounded-lg px-2 py-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10 dark:hover:text-white"
+            class="dialog-close"
           >
             ✕
           </button>
         </header>
 
         @if (conteudo.lives.length || conteudo.videosOficiais.length) {
-          <nav class="flex gap-1 border-b border-zinc-200 px-6 dark:border-zinc-800" role="tablist">
+          <nav class="dialog-tabs" aria-label="Conteúdo do jogo">
             <button
               type="button"
-              role="tab"
-              [attr.aria-selected]="abaAtiva() === 'mods'"
+              [attr.aria-pressed]="abaAtiva() === 'mods'"
               (click)="trocarAba('mods')"
-              class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
-              [class]="
-                abaAtiva() === 'mods'
-                  ? 'border-violet-500 text-violet-600 dark:text-violet-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-              "
+              class="dialog-tab"
+              [class.is-active]="abaAtiva() === 'mods'"
             >
-              📦 Mods
+              Downloads e mods
             </button>
             @if (conteudo.lives.length) {
               <button
                 type="button"
-                role="tab"
-                [attr.aria-selected]="abaAtiva() === 'lives'"
+                [attr.aria-pressed]="abaAtiva() === 'lives'"
                 (click)="trocarAba('lives')"
-                class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
-                [class]="
-                  abaAtiva() === 'lives'
-                    ? 'border-red-500 text-red-600 dark:text-red-400'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-                "
-              >
-                🔴 Lives
+                class="dialog-tab"
+              [class.is-active]="abaAtiva() === 'lives'"
+            >
+                Lives
               </button>
             }
             @if (conteudo.videosOficiais.length) {
               <button
                 type="button"
-                role="tab"
-                [attr.aria-selected]="abaAtiva() === 'videos'"
+                [attr.aria-pressed]="abaAtiva() === 'videos'"
                 (click)="trocarAba('videos')"
-                class="-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold transition"
-                [class]="
-                  abaAtiva() === 'videos'
-                    ? 'border-fuchsia-500 text-fuchsia-600 dark:text-fuchsia-400'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-                "
-              >
-                🎬 Vídeos
+                class="dialog-tab"
+              [class.is-active]="abaAtiva() === 'videos'"
+            >
+                Vídeos oficiais
               </button>
             }
           </nav>
         }
 
-        <div class="space-y-6 overflow-y-auto px-6 py-5">
+        <div class="dialog-content">
           @if (
             (abaAtiva() === 'lives' && conteudo.lives.length) ||
             (abaAtiva() === 'videos' && conteudo.videosOficiais.length)
@@ -227,22 +112,16 @@
             @let atual = fontes[fonteSelecionada()] ?? fontes[0];
             @let ehPlaylist = atual.fonte.url.includes('list=');
             @let aviso = ehLives ? modpack.lives?.aviso : modpack.videosOficiais?.aviso;
-            <section>
+            <section class="media-section">
+              <div class="media-heading"><div><h4>{{ ehLives ? 'Lives do jogo' : 'Vídeos oficiais' }}</h4><p>{{ ehLives ? 'Reveja as lives nos canais que preservam a série.' : 'Vídeos do Filipe sobre este jogo.' }}</p></div></div>
               @if (fontes.length > 1) {
-                <div class="mb-3 flex flex-wrap gap-2">
+                <p class="source-label">Escolha o canal ou vídeo</p>
+                <div class="source-list">
                   @for (opcao of fontes; track opcao.fonte.url; let i = $index) {
                     <button
                       type="button"
                       (click)="fonteSelecionada.set(i)"
-                      class="rounded-full border px-3 py-1 text-xs font-semibold transition"
-                      [class]="
-                        fonteSelecionada() === i
-                          ? ehLives
-                            ? 'border-red-500 bg-red-600 text-white'
-                            : 'border-fuchsia-500 bg-fuchsia-600 text-white'
-                          : 'border-zinc-300 text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-white'
-                      "
-                    >
+                      class="source-button" [class.is-active]="fonteSelecionada() === i" [attr.aria-pressed]="fonteSelecionada() === i">
                       {{ opcao.fonte.titulo ?? opcao.fonte.canal }}
                     </button>
                   }
@@ -255,9 +134,8 @@
                   {{ atual.fonte.titulo }}
                 </h4>
               }
-              <div
-                class="aspect-video overflow-hidden rounded-xl border border-zinc-200 bg-black dark:border-zinc-800"
-              >
+              <div class="media-source"><span>{{ ehPlaylist ? 'Playlist' : 'Vídeo' }}</span><strong>{{ atual.fonte.canal }}</strong></div>
+              <div class="media-player">
                 <iframe
                   [src]="atual.player"
                   [title]="(ehLives ? 'Lives de ' : 'Vídeos de ') + modpack.jogo"
@@ -267,25 +145,21 @@
                   allowfullscreen
                 ></iframe>
               </div>
-              <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+              <div class="media-footer">
                 <p class="text-zinc-500 dark:text-zinc-400">
                   @if (ehPlaylist) {
                     Use o ícone de lista no canto do player para escolher
                     {{ ehLives ? 'a live' : 'o vídeo' }}.
                   }
-                  {{ ehPlaylist ? 'Playlist' : 'Vídeo' }} do canal
-                  <span class="font-semibold text-zinc-700 dark:text-zinc-200">{{
-                    atual.fonte.canal
-                  }}</span
-                  >.
+                  @if (!ehPlaylist) { Assista aqui ou abra no YouTube. }
                 </p>
                 <a
                   [href]="atual.fonte.url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-500"
+                  class="youtube-link"
                 >
-                  ▶ Abrir no YouTube
+                  Abrir no YouTube ↗
                 </a>
               </div>
               @if (aviso) {
@@ -309,11 +183,11 @@
             </section>
           } @else {
             @for (video of conteudo.videos; track video.label) {
-              <section>
+              <section class="tutorial-section">
                 <h4
-                  class="mb-2 text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400"
+                  class="tutorial-title"
                 >
-                  🎬 {{ video.label }}
+                  {{ video.label }}
                 </h4>
                 <div
                   class="aspect-video overflow-hidden rounded-xl border border-zinc-200 bg-black dark:border-zinc-800"
