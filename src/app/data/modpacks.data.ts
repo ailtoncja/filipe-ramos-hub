@@ -417,6 +417,7 @@ export const MODPACKS: Modpack[] = [
     descricao: 'Mods de interface e balanceamento.',
     imagemUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2054970/capsule_616x353.jpg',
     itens: [
+      { label: 'Baixar Care Package', url: 'https://drive.google.com/file/d/1jgHKQaAJJZ4jXjCbKXeiY_e2Y3I6hmt_/view?usp=sharing' },
       { label: 'Clear Effect Descriptions (atualizado por um fã)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/1619' },
       { label: 'Clear Effect Descriptions (desatualizado)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/314' },
       { label: 'End-Game Stats for All Dragonforged Equipment (desatualizado)', url: 'https://www.nexusmods.com/dragonsdogma2/mods/410' }
