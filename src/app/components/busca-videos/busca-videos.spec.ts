@@ -5,7 +5,7 @@ import { BuscaVideos } from './busca-videos';
 describe('BuscaVideos', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('busca títulos e descrições sem acentos e filtra por canal', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ atualizadoEm: '2026-01-01T00:00:00Z', videos: [
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ atualizadoEm: '2026-01-01T00:00:00Z', playlists: [{ id: 'PLabc', titulo: 'Elden Ring: série completa', descricao: 'A jornada', canal: 'Canal A', fontes: ['@FilipeRamos96'], publicadoEm: '2024-01-01T00:00:00Z', miniatura: '', quantidadeVideos: 12 }], videos: [
       { id: '1', titulo: 'A aventura', descricao: 'Explorando Elden Ring', canal: 'Canal A', fontes: ['@FilipeRamos96'], publicadoEm: '2025-01-01T00:00:00Z', miniatura: '', visualizacoes: 100 },
       { id: '2', titulo: 'Elden Ring', descricao: '', canal: 'Canal B', fontes: ['@filiperamoslives'], publicadoEm: '2024-01-01T00:00:00Z', miniatura: '', visualizacoes: 1250 },
     ] }) }));
@@ -27,5 +27,12 @@ describe('BuscaVideos', () => {
     select.value = '@filiperamoslives'; select.dispatchEvent(new Event('change')); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Canal B');
     expect(fixture.nativeElement.textContent).not.toContain('Canal A');
+    select.value = ''; select.dispatchEvent(new Event('change'));
+    const tipoPlaylist = [...fixture.nativeElement.querySelectorAll('button')].find((button: any) => button.textContent.trim() === 'Playlists') as HTMLButtonElement;
+    tipoPlaylist.click(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('1 playlist encontrada');
+    expect(fixture.nativeElement.textContent).toContain('12 vídeos');
+    expect(fixture.nativeElement.querySelector('.video-card')?.getAttribute('href')).toBe('https://www.youtube.com/playlist?list=PLabc');
+    expect((fixture.nativeElement.querySelectorAll('select')[1] as HTMLSelectElement).value).toBe('recentes');
   });
 });

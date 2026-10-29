@@ -6,7 +6,7 @@ Um ponto de encontro feito por fãs para reunir conteúdo do Filipe Ramos e dos 
 
 ## O que você encontra aqui
 
-- **Busca de vídeos:** pesquise títulos e descrições dos vídeos das fontes cadastradas, filtre por canal e ordene por data ou número de visualizações. Os resultados levam ao YouTube.
+- **Busca de vídeos:** pesquise títulos e descrições de vídeos e playlists das fontes cadastradas, filtre por canal e ordene por data. Vídeos também podem ser ordenados por visualizações. Os resultados levam ao YouTube.
 - **Glossário de canais:** encontre canais oficiais e canais da comunidade que preservam lives e cortes.
 - **Lives avulsas:** acesse transmissões individuais reunidas pela comunidade.
 - **Playlist:** ouça a playlist do Spotify usada nas lives.
@@ -37,7 +37,7 @@ O site é construído com **Angular**, **TypeScript** e **Tailwind CSS**.
 
 A busca usa o arquivo `public/data/videos.json`. Ele é gerado a partir das fontes listadas em `src/app/data/canais.data.ts`: para canais, o script consulta a playlist de uploads; quando a fonte cadastrada é uma playlist, ele consulta apenas os vídeos dessa playlist.
 
-A pesquisa considera títulos e descrições, sem diferenciar maiúsculas ou acentos. As visualizações refletem a última atualização do catálogo. Vídeos privados, removidos ou indisponíveis podem não aparecer; a contagem de visualizações pode não estar disponível para todos os vídeos.
+A pesquisa considera títulos e descrições, sem diferenciar maiúsculas ou acentos. As playlists públicas dos canais são coletadas separadamente; fontes que apontam para uma playlist específica incluem apenas essa playlist. As visualizações refletem a última atualização do catálogo. Vídeos privados, removidos ou indisponíveis podem não aparecer; a contagem de visualizações pode não estar disponível para todos os vídeos.
 
 ### Atualização manual
 

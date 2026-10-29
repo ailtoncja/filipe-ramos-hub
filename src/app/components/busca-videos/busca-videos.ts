@@ -12,7 +12,8 @@ interface Video {
   miniatura: string;
   visualizacoes?: number;
 }
-interface Catalogo { atualizadoEm: string | null; videos: Video[]; }
+interface Playlist extends Video { quantidadeVideos: number; }
+interface Catalogo { atualizadoEm: string | null; videos: Video[]; playlists?: Playlist[]; }
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 @Component({
@@ -24,6 +25,7 @@ export class BuscaVideos {
   protected readonly formatarVisualizacoes = (valor: number) => new Intl.NumberFormat('pt-BR').format(valor);
   protected readonly canais = [...CANAIS].sort((a, b) => a.nomeExibicao.localeCompare(b.nomeExibicao, 'pt-BR'));
   protected readonly nomeDoCanal = (nome: string) => CANAIS.find((canal) => canal.nome === nome)?.nomeExibicao ?? nome;
+  protected readonly tipo = signal<'videos' | 'playlists'>('videos');
   protected readonly busca = signal('');
   protected readonly canal = signal('');
   protected readonly ordem = signal('recentes');
@@ -33,7 +35,8 @@ export class BuscaVideos {
   protected readonly resultados = computed(() => {
     const termos = normalizar(this.busca().trim()).split(/\s+/).filter(Boolean);
     const canal = this.canal();
-    return (this.catalogo()?.videos ?? []).filter((video) => {
+    const itens: Video[] = this.tipo() === 'playlists' ? (this.catalogo()?.playlists ?? []) : (this.catalogo()?.videos ?? []);
+    return itens.filter((video) => {
       const texto = normalizar(`${video.titulo} ${video.descricao}`);
       return termos.every((termo) => texto.includes(termo)) && (!canal || video.fontes.includes(canal));
     }).sort((a, b) => {
@@ -52,6 +55,14 @@ export class BuscaVideos {
       if (!response.ok) throw new Error('Catálogo indisponível');
       return response.json() as Promise<Catalogo>;
     }).then((catalogo) => this.catalogo.set(catalogo)).catch(() => this.erro.set(true));
+  }
+  protected trocarTipo(tipo: 'videos' | 'playlists'): void {
+    this.tipo.set(tipo);
+    this.limite.set(24);
+    if (tipo === 'playlists' && this.ordem() === 'vistos') this.ordem.set('recentes');
+  }
+  protected quantidadeVideos(item: Video): number | null {
+    return 'quantidadeVideos' in item && typeof item.quantidadeVideos === 'number' ? item.quantidadeVideos : null;
   }
   protected alterarBusca(event: Event): void { this.busca.set((event.target as HTMLInputElement).value); this.limite.set(24); }
   protected alterarCanal(event: Event): void { this.canal.set((event.target as HTMLSelectElement).value); this.limite.set(24); }
