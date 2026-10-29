@@ -2,28 +2,33 @@
   <div class="section-inner">
     <div class="section-heading discover-heading">
       <div><h2>Cadê aquela live<span>?</span></h2></div>
-      <p>De Bloodborne ao Fallout, procure vídeos e lives do Filipe pelos canais da comunidade.</p>
+      <p>De Bloodborne ao Fallout, procure vídeos, lives e playlists do Filipe pelos canais da comunidade.</p>
+    </div>
+    <div class="search-types" aria-label="Tipo de conteúdo">
+      <button type="button" (click)="trocarTipo('videos')" [attr.aria-pressed]="tipo() === 'videos'" [class.active]="tipo() === 'videos'">Vídeos</button>
+      <button type="button" (click)="trocarTipo('playlists')" [attr.aria-pressed]="tipo() === 'playlists'" [class.active]="tipo() === 'playlists'">Playlists</button>
     </div>
     <div class="search-panel">
-      <label class="search-field search-query"><span>Pesquisar vídeos</span><div><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input type="search" placeholder="Busque um jogo ou assunto..." [value]="busca()" (input)="alterarBusca($event)" /></div></label>
+      <label class="search-field search-query"><span>Pesquisar {{ tipo() === 'videos' ? 'vídeos' : 'playlists' }}</span><div><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input type="search" placeholder="Busque um jogo ou assunto..." [value]="busca()" (input)="alterarBusca($event)" /></div></label>
       <label class="search-field"><span>Canal</span><select [value]="canal()" (change)="alterarCanal($event)"><option value="">Todos os canais</option>@for (item of canais; track item.nome) { <option [value]="item.nome">{{ item.nomeExibicao }}</option> }</select></label>
-      <label class="search-field"><span>Ordenar por</span><select [value]="ordem()" (change)="alterarOrdem($event)"><option value="recentes">Mais recentes</option><option value="antigos">Mais antigos</option><option value="vistos">Mais vistos</option></select></label>
+      <label class="search-field"><span>Ordenar por</span><select [value]="ordem()" (change)="alterarOrdem($event)"><option value="recentes">Mais recentes</option><option value="antigos">Mais antigos</option>@if (tipo() === 'videos') { <option value="vistos">Mais vistos</option> }</select></label>
     </div>
     <div aria-live="polite" class="search-meta">
       @if (erro()) { Não foi possível carregar os vídeos. Tente recarregar a página. }
       @else if (!catalogo()) { Carregando vídeos... }
       @else if (!catalogo()?.atualizadoEm) { O catálogo de vídeos ainda está sendo preparado. Volte em breve! }
-      @else { <strong>{{ resultados().length }} {{ resultados().length === 1 ? 'vídeo encontrado' : 'vídeos encontrados' }}</strong><span>Atualizado em {{ catalogo()?.atualizadoEm | date:'dd/MM/yyyy' }}</span> }
+      @else if (tipo() === 'playlists' && !catalogo()?.playlists) { As playlists aparecerão após a próxima atualização do catálogo. }
+      @else { <strong>{{ resultados().length }} {{ tipo() === 'videos' ? (resultados().length === 1 ? 'vídeo encontrado' : 'vídeos encontrados') : (resultados().length === 1 ? 'playlist encontrada' : 'playlists encontradas') }}</strong><span>Atualizado em {{ catalogo()?.atualizadoEm | date:'dd/MM/yyyy' }}</span> }
     </div>
-    @if (catalogo()?.atualizadoEm && resultados().length === 0) { <p class="empty-results">Nenhum vídeo encontrado. Tente outro termo ou canal.</p> }
+    @if (catalogo()?.atualizadoEm && (tipo() === 'videos' || catalogo()?.playlists) && resultados().length === 0) { <p class="empty-results">Nenhum resultado encontrado. Tente outro termo ou canal.</p> }
     <div class="video-grid">
       @for (video of visiveis(); track video.id) {
-        <a [href]="'https://www.youtube.com/watch?v=' + video.id" target="_blank" rel="noopener noreferrer" class="video-card">
-          <div class="video-image"><img [src]="video.miniatura" alt="" loading="lazy" /><span aria-hidden="true" class="video-play">▶</span></div>
-          <div class="video-info"><h3>{{ video.titulo }}</h3><p>{{ nomeDoCanal(video.canal) }}</p><span>{{ video.publicadoEm | date:'dd/MM/yyyy' }} @if (video.visualizacoes != null) { · {{ formatarVisualizacoes(video.visualizacoes) }} visualizações }</span></div>
+        <a [href]="tipo() === 'videos' ? 'https://www.youtube.com/watch?v=' + video.id : 'https://www.youtube.com/playlist?list=' + video.id" target="_blank" rel="noopener noreferrer" class="video-card">
+          <div class="video-image"><img [src]="video.miniatura" alt="" loading="lazy" /><span class="video-play" [attr.aria-label]="tipo() === 'playlists' ? 'Playlist' : null">{{ tipo() === 'playlists' ? 'Lista' : '▶' }}</span></div>
+          <div class="video-info"><h3>{{ video.titulo }}</h3><p>{{ nomeDoCanal(video.canal) }}</p><span>{{ video.publicadoEm | date:'dd/MM/yyyy' }} @if (tipo() === 'playlists') { · {{ quantidadeVideos(video) }} vídeos } @if (tipo() === 'videos' && video.visualizacoes != null) { · {{ formatarVisualizacoes(video.visualizacoes) }} visualizações }</span></div>
         </a>
       }
     </div>
-    @if (visiveis().length < resultados().length) { <div class="more-videos"><button type="button" (click)="limite.set(limite() + 24)">Mostrar mais vídeos <span aria-hidden="true">↓</span></button></div> }
+    @if (visiveis().length < resultados().length) { <div class="more-videos"><button type="button" (click)="limite.set(limite() + 24)">Mostrar mais {{ tipo() === 'videos' ? 'vídeos' : 'playlists' }} <span aria-hidden="true">↓</span></button></div> }
   </div>
 </section>

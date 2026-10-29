@@ -14,15 +14,40 @@ const api = async (endpoint, params) => {
   return body;
 };
 const videos = new Map();
+const playlists = new Map();
+const addPlaylist = (item, name) => {
+  const snippet = item.snippet;
+  if (!item.id || !snippet) return;
+  const existing = playlists.get(item.id);
+  if (existing) {
+    if (!existing.fontes.includes(name)) existing.fontes.push(name);
+    return;
+  }
+  playlists.set(item.id, { id: item.id, titulo: snippet.title, descricao: snippet.description ?? '', canal: snippet.channelTitle || name, fontes: [name], publicadoEm: snippet.publishedAt, miniatura: snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '', quantidadeVideos: item.contentDetails?.itemCount ?? 0 });
+};
 for (const [, name, link] of blocks) {
   const sourceUrl = new URL(link);
   let playlist = sourceUrl.searchParams.get('list');
+  if (playlist) {
+    const result = await api('playlists', { part: 'snippet,contentDetails', id: playlist });
+    if (!result.items?.length) throw new Error('Playlist não encontrada: ' + name);
+    for (const item of result.items) addPlaylist(item, name);
+  }
   if (!playlist) {
     const handle = sourceUrl.pathname.split('/').filter(Boolean)[0];
     if (!handle?.startsWith('@')) throw new Error(`Endereço de canal não reconhecido: ${link}`);
     const result = await api('channels', { part: 'contentDetails', forHandle: handle });
     playlist = result.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!playlist) throw new Error(`Canal não encontrado: ${name}`);
+    const channelId = result.items[0].id;
+    let nextPage;
+    do {
+      const params = { part: 'snippet,contentDetails', channelId, maxResults: '50' };
+      if (nextPage) params.pageToken = nextPage;
+      const page = await api('playlists', params);
+      for (const item of page.items ?? []) addPlaylist(item, name);
+      nextPage = page.nextPageToken;
+    } while (nextPage);
   }
   console.log(`Atualizando ${name}...`);
   let token;
@@ -54,6 +79,6 @@ for (let i = 0; i < ids.length; i += 50) {
     if (video && count != null && Number.isSafeInteger(Number(count))) video.visualizacoes = Number(count);
   }
 }
-const catalog = { atualizadoEm: new Date().toISOString(), videos: [...videos.values()].sort ( (a, b) => b.publicadoEm.localeCompare(a.publicadoEm)) };
+const catalog = { atualizadoEm: new Date().toISOString(), playlists: [...playlists.values()], videos: [...videos.values()].sort ( (a, b) => b.publicadoEm.localeCompare(a.publicadoEm)) };
 await writeFile(new URL('../public/data/videos.json', import.meta.url), JSON.stringify(catalog));
-console.log(`${catalog.videos.length} vídeos salvos.`);
+console.log(`${catalog.videos.length} vídeos e ${catalog.playlists.length} playlists salvos.`);
