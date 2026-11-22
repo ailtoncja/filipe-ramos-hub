@@ -22,7 +22,7 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       - name: Salvar catálogo
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'Ailton Custodio Junior'
+          git config user.email '186901653+ailtoncja@users.noreply.github.com'
           git add public/data/videos.json
           git diff --cached --quiet || (git commit -m 'Atualiza catálogo de vídeos' && git push)
