@@ -1,5 +1,6 @@
 import { EXTRAS_CATALOGO } from '@/data/extras-catalogo';
 import { ehFonteOficial } from '@/data/fontes';
+import { PLAYLISTS_OCULTAS_SET, VIDEOS_OCULTOS_SET } from '@/data/ocultos';
 import {
   type CampoIndexado,
   indexarCampoBusca,
@@ -51,13 +52,29 @@ export interface FiltroCatalogoParams {
 }
 
 export function mesclarExtrasCatalogo(catalogo: Catalogo): Catalogo {
-  const existentes = new Set(catalogo.videos.map((v) => v.id));
-  const adicionais = EXTRAS_CATALOGO.filter((extra) => !existentes.has(extra.id));
-  if (adicionais.length === 0) return catalogo;
+  const videosVisiveis = catalogo.videos.filter(
+    (v) => !VIDEOS_OCULTOS_SET.has(v.id),
+  );
+  const playlistsVisiveis = catalogo.playlists.filter(
+    (p) => !PLAYLISTS_OCULTAS_SET.has(p.id),
+  );
+  const existentes = new Set(videosVisiveis.map((v) => v.id));
+  const adicionais = EXTRAS_CATALOGO.filter(
+    (extra) => !existentes.has(extra.id) && !VIDEOS_OCULTOS_SET.has(extra.id),
+  );
+
+  if (
+    adicionais.length === 0 &&
+    videosVisiveis.length === catalogo.videos.length &&
+    playlistsVisiveis.length === catalogo.playlists.length
+  ) {
+    return catalogo;
+  }
 
   return {
     ...catalogo,
-    videos: [...catalogo.videos, ...adicionais].sort((a, b) =>
+    playlists: playlistsVisiveis,
+    videos: [...videosVisiveis, ...adicionais].sort((a, b) =>
       b.publicadoEm.localeCompare(a.publicadoEm),
     ),
   };

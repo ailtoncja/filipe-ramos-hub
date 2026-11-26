@@ -1,3 +1,5 @@
+import { PLAYLIST_EMBED_FALLBACK } from '@/data/playlists-embed-fallback';
+
 export interface YoutubeEmbedInfo {
   embedUrl: string;
   watchUrl: string;
@@ -5,6 +7,26 @@ export interface YoutubeEmbedInfo {
   ehPlaylist: boolean;
   videoId: string | null;
   playlistId: string | null;
+}
+
+function buildQueueEmbedUrl(
+  videos: readonly string[],
+  options?: { initialVideoId?: string | null; start?: number | null; autoplay?: boolean },
+): string {
+  const first =
+    options?.initialVideoId && videos.includes(options.initialVideoId)
+      ? options.initialVideoId
+      : videos[0];
+  const ordered =
+    first === videos[0]
+      ? videos
+      : [first, ...videos.filter((id) => id !== first)];
+  const extra = new URLSearchParams();
+  if (options?.start) extra.set('start', String(options.start));
+  if (options?.autoplay) extra.set('autoplay', '1');
+  const suffix = extra.toString();
+  const playlistParam = `playlist=${ordered.map(encodeURIComponent).join(',')}`;
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(first)}?${playlistParam}${suffix ? `&${suffix}` : ''}`;
 }
 
 export function parseYoutubeUrl(url: string): YoutubeEmbedInfo | null {
@@ -29,6 +51,22 @@ export function parseYoutubeUrl(url: string): YoutubeEmbedInfo | null {
   const startParam = Number.isFinite(inicio) && inicio > 0 ? inicio : null;
 
   if (playlistId) {
+    const fallbackVideos = PLAYLIST_EMBED_FALLBACK[playlistId];
+    if (fallbackVideos?.length) {
+      const videoInicial = rawVideoId ?? fallbackVideos[0];
+      return {
+        embedUrl: buildQueueEmbedUrl(fallbackVideos, {
+          initialVideoId: rawVideoId,
+          start: startParam,
+        }),
+        watchUrl: url,
+        thumbnailUrl: `https://i.ytimg.com/vi/${videoInicial}/hqdefault.jpg`,
+        ehPlaylist: true,
+        videoId: videoInicial,
+        playlistId,
+      };
+    }
+
     if (rawVideoId) {
       const qs = new URLSearchParams({ list: playlistId });
       if (startParam) qs.set('start', String(startParam));
@@ -73,6 +111,10 @@ export function embedDeVideoId(id: string): string {
 }
 
 export function embedDePlaylistId(id: string): string {
+  const fallbackVideos = PLAYLIST_EMBED_FALLBACK[id];
+  if (fallbackVideos?.length) {
+    return buildQueueEmbedUrl(fallbackVideos, { autoplay: true });
+  }
   return `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(id)}&autoplay=1`;
 }
 

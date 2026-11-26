@@ -1,3 +1,4 @@
+import { PLAYLISTS_OCULTAS_SET, VIDEOS_OCULTOS_SET } from '@/data/ocultos';
 import type { Catalogo, Fonte, PlaylistCatalogo, VideoCatalogo } from './types';
 
 const ENTRY_RE = /<entry>([\s\S]*?)<\/entry>/g;
@@ -233,10 +234,13 @@ export function mesclarNovidadesNoCatalogo(
   if (sync.fontesComSucesso === 0) return base;
 
   const videosPorId = new Map<string, VideoCatalogo>(
-    base.videos.map((v) => [v.id, { ...v, fontes: [...v.fontes] }]),
+    base.videos
+      .filter((v) => !VIDEOS_OCULTOS_SET.has(v.id))
+      .map((v) => [v.id, { ...v, fontes: [...v.fontes] }]),
   );
 
   for (const novo of sync.videos) {
+    if (VIDEOS_OCULTOS_SET.has(novo.id)) continue;
     const existente = videosPorId.get(novo.id);
     if (existente) {
       for (const f of novo.fontes) {
@@ -258,10 +262,13 @@ export function mesclarNovidadesNoCatalogo(
   }
 
   const playlistsPorId = new Map<string, PlaylistCatalogo>(
-    base.playlists.map((p) => [p.id, { ...p, fontes: [...p.fontes] }]),
+    base.playlists
+      .filter((p) => !PLAYLISTS_OCULTAS_SET.has(p.id))
+      .map((p) => [p.id, { ...p, fontes: [...p.fontes] }]),
   );
 
   for (const pl of sync.playlistsAtualizadas) {
+    if (PLAYLISTS_OCULTAS_SET.has(pl.id)) continue;
     const existente = playlistsPorId.get(pl.id);
     if (existente) {
       for (const f of pl.fontes) {

@@ -8,7 +8,7 @@ import {
   mesclarExtrasCatalogo,
 } from './catalog';
 import type { Catalogo } from './types';
-import { parseYoutubeUrl } from './youtube';
+import { embedDePlaylistId, parseYoutubeUrl } from './youtube';
 import {
   mesclarNovidadesNoCatalogo,
   parseYoutubeAtomFeed,
@@ -313,6 +313,37 @@ describe('catalog helpers', () => {
     expect(stalker.length).toBeGreaterThanOrEqual(15);
   });
 
+  it('remove playlists ocultas tanto na base quanto durante a sincronização ao vivo', () => {
+    const ocultaId = 'PLGSGmwDgc4XRwVq8Fbx1ATQGNd9dx-Xjc';
+    const comOculta: Catalogo = {
+      ...CATALOGO_EXEMPLO,
+      playlists: [
+        ...CATALOGO_EXEMPLO.playlists,
+        {
+          id: ocultaId,
+          titulo: 'Playlist removida',
+          descricao: '',
+          canal: 'Cortes do Filipe Ramos',
+          fontes: ['@cortesdofiliperamos'],
+          publicadoEm: '2025-01-01T00:00:00Z',
+          miniatura: '',
+          quantidadeVideos: 4,
+        },
+      ],
+    };
+
+    const filtradoBase = mesclarExtrasCatalogo(comOculta);
+    expect(filtradoBase.playlists.some((p) => p.id === ocultaId)).toBe(false);
+
+    const filtradoLive = mesclarNovidadesNoCatalogo(CATALOGO_EXEMPLO, {
+      videos: [],
+      playlistsAtualizadas: [comOculta.playlists[1]],
+      sincronizadoEm: '2026-11-26T08:00:00Z',
+      fontesComSucesso: 1,
+    });
+    expect(filtradoLive.playlists.some((p) => p.id === ocultaId)).toBe(false);
+  });
+
   it('encontra playlists relacionadas a um jogo sem duplicar URLs já curadas', () => {
     const semDuplicar = encontrarPlaylistsDoJogo(
       'The Witcher 3: Wild Hunt',
@@ -361,6 +392,16 @@ describe('parseYoutubeUrl', () => {
       'https://www.youtube-nocookie.com/embed/Wqf_eESeHiA?list=PLW0ps8BYf-tY',
     );
     expect(list?.ehPlaylist).toBe(true);
+
+    const fallbackList = parseYoutubeUrl(
+      'https://www.youtube.com/watch?v=KGkJMJviRQs&list=PLR2b8Khskp2E',
+    );
+    expect(fallbackList?.embedUrl).toBe(
+      'https://www.youtube-nocookie.com/embed/KGkJMJviRQs?playlist=KGkJMJviRQs,62guKHVWWGg,-goCG4BGqsg',
+    );
+    expect(embedDePlaylistId('PLR2b8Khskp2E')).toBe(
+      'https://www.youtube-nocookie.com/embed/KGkJMJviRQs?playlist=KGkJMJviRQs,62guKHVWWGg,-goCG4BGqsg&autoplay=1',
+    );
   });
 });
 

@@ -5,6 +5,13 @@ if (!key) throw new Error('Defina a variável YOUTUBE_API_KEY antes de atualizar
 const source = await readFile(new URL('../src/data/fontes.ts', import.meta.url), 'utf8');
 const blocks = [...source.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'[\s\S]*?\}/g)];
 if (!blocks.length) throw new Error('Nenhuma fonte encontrada em src/data/fontes.ts.');
+const ocultosSource = await readFile(new URL('../src/data/ocultos.ts', import.meta.url), 'utf8').catch(() => '');
+const extrairIdsLista = (nomeConst) => {
+  const m = ocultosSource.match(new RegExp(`export const ${nomeConst}[^=]*=\\s*\\[([\\s\\S]*?)\\];`));
+  return new Set([...(m?.[1].matchAll(/'([^']+)'/g) ?? [])].map((x) => x[1]));
+};
+const playlistsOcultas = extrairIdsLista('PLAYLISTS_OCULTAS');
+const videosOcultos = extrairIdsLista('VIDEOS_OCULTOS');
 const api = async (endpoint, params) => {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${endpoint}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -17,7 +24,7 @@ const videos = new Map();
 const playlists = new Map();
 const addPlaylist = (item, name) => {
   const snippet = item.snippet;
-  if (!item.id || !snippet) return;
+  if (!item.id || !snippet || playlistsOcultas.has(item.id)) return;
   const existing = playlists.get(item.id);
   if (existing) {
     if (!existing.fontes.includes(name)) existing.fontes.push(name);
@@ -34,7 +41,7 @@ const coletarVideosDaPlaylist = async (playlistId, name) => {
     for (const item of result.items ?? []) {
       const s = item.snippet;
       const id = item.contentDetails?.videoId;
-      if (!id || !s || ['Private video', 'Deleted video'].includes(s.title)) continue;
+      if (!id || !s || videosOcultos.has(id) || ['Private video', 'Deleted video'].includes(s.title)) continue;
       const video = videos.get(id);
       if (video) {
         if (!video.fontes.includes(name)) video.fontes.push(name);
