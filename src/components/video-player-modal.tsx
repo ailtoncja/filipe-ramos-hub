@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ehFonteOficial, nomeExibicaoDaFonte } from '@/data/fontes';
 import { montarUrlMaratona } from '@/lib/sequencias';
-import { formatarDataBR, formatarNumero } from '@/lib/text';
+import {
+  formatarDataBR,
+  formatarNumero,
+  segmentarTextoComLinks,
+} from '@/lib/text';
 import type { PlaylistCatalogo, TipoCatalogo, VideoCatalogo } from '@/lib/types';
 import {
   embedDeFilaVideos,
@@ -65,7 +69,12 @@ export function VideoPlayerModal({
 }: VideoPlayerModalProps) {
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [maratonaSalvaFeedback, setMaratonaSalvaFeedback] = useState(false);
+  const [descricaoExpandida, setDescricaoExpandida] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    setDescricaoExpandida(false);
+  }, [item.id]);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -113,6 +122,12 @@ export function VideoPlayerModal({
       : null;
 
   const nomeSequencia = tituloSequencia?.trim() || item.titulo;
+  const descricaoLimpa = item.descricao?.trim() ?? '';
+  const segmentosDescricao = descricaoLimpa
+    ? segmentarTextoComLinks(descricaoLimpa)
+    : [];
+  const descricaoLonga =
+    descricaoLimpa.length > 420 || descricaoLimpa.split('\n').length > 7;
 
   async function copiarLinkCompartilhavel() {
     try {
@@ -201,16 +216,18 @@ export function VideoPlayerModal({
         </div>
 
         <div className="overflow-y-auto">
-          <div className="aspect-video w-full bg-[var(--player-bg)]">
-            <iframe
-              key={embedSrc}
-              src={embedSrc}
-              title={item.titulo}
-              className="h-full w-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
+          <div className="flex w-full justify-center bg-[var(--player-bg)]">
+            <div className="aspect-video max-h-[54dvh] w-full">
+              <iframe
+                key={embedSrc}
+                src={embedSrc}
+                title={item.titulo}
+                className="h-full w-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
           </div>
 
           {/* Controles de Anterior / Próximo quando em Sequência ou Maratona */}
@@ -337,6 +354,52 @@ export function VideoPlayerModal({
             </div>
           </div>
 
+          {/* Descrição do vídeo com links clicáveis */}
+          {segmentosDescricao.length > 0 ? (
+            <section
+              aria-label="Descrição"
+              className="border-t border-[var(--border)] px-5 py-4 sm:px-6"
+            >
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
+                  Descrição
+                </h3>
+                <p
+                  className={`mt-2 max-w-[75ch] whitespace-pre-line break-words text-sm leading-relaxed text-[var(--ink-secondary)] ${
+                    descricaoLonga && !descricaoExpandida ? 'line-clamp-6' : ''
+                  }`}
+                >
+                  {segmentosDescricao.map((seg, idx) =>
+                    seg.tipo === 'link' ? (
+                      <a
+                        key={`${idx}-${seg.href}`}
+                        href={seg.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="break-all font-medium text-[var(--accent-text)] underline decoration-[var(--accent-soft-border)] underline-offset-2 transition-colors hover:decoration-[var(--accent)]"
+                      >
+                        {seg.label}
+                      </a>
+                    ) : (
+                      <span key={idx}>{seg.valor}</span>
+                    ),
+                  )}
+                </p>
+                {descricaoLonga ? (
+                  <button
+                    type="button"
+                    onClick={() => setDescricaoExpandida((v) => !v)}
+                    className="mt-2.5 inline-flex min-h-9 cursor-pointer items-center text-xs font-semibold text-[var(--accent-text)] hover:underline"
+                  >
+                    {descricaoExpandida
+                      ? 'Mostrar menos'
+                      : 'Mostrar descrição completa'}
+                  </button>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
           {/* Lista clicável de episódios da Sequência / Maratona */}
           {temSequencia && onSelecionarEpisodio ? (
             <section
@@ -423,14 +486,6 @@ export function VideoPlayerModal({
                 })}
               </ol>
             </section>
-          ) : null}
-
-          {item.descricao ? (
-            <div className="border-t border-[var(--border)] px-5 py-5 sm:px-6">
-              <p className="max-w-[70ch] whitespace-pre-line break-words text-sm leading-relaxed text-[var(--ink-secondary)]">
-                {item.descricao}
-              </p>
-            </div>
           ) : null}
         </div>
       </div>

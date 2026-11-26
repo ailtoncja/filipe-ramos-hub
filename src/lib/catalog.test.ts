@@ -25,6 +25,7 @@ import {
   montarUrlMaratona,
   parsearMaratonaDaUrl,
 } from './sequencias';
+import { segmentarTextoComLinks } from './text';
 import {
   encontrarCarePackageParaJogoTwitch,
   interpretarUptimeDecApi,
@@ -649,5 +650,29 @@ describe('biblioteca local e integração Twitch', () => {
 
     est = removerMaratonaLocal(est, est.maratonas[0].id);
     expect(est.maratonas).toHaveLength(0);
+  });
+
+  it('transforma URLs (https e www) na descrição em links clicáveis preservando pontuação final', () => {
+    const segs = segmentarTextoComLinks(
+      'Assista em https://www.twitch.tv/filiperaaamos, canal www.youtube.com/@FilipeRamos96! (https://drive.google.com/file/d/abc).',
+    );
+    const links = segs.filter((s) => s.tipo === 'link');
+    expect(links).toEqual([
+      {
+        tipo: 'link',
+        label: 'https://www.twitch.tv/filiperaaamos',
+        href: 'https://www.twitch.tv/filiperaaamos',
+      },
+      {
+        tipo: 'link',
+        label: 'www.youtube.com/@FilipeRamos96',
+        href: 'https://www.youtube.com/@FilipeRamos96',
+      },
+      {
+        tipo: 'link',
+        label: 'https://drive.google.com/file/d/abc',
+        href: 'https://drive.google.com/file/d/abc',
+      },
+    ]);
   });
 });

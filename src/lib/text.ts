@@ -37,3 +37,73 @@ export function formatarDataBR(iso: string | null | undefined): string {
 export function limparPrefixoEmoji(titulo: string): string {
   return titulo.replace(LEADING_EMOJI_RE, '').trim();
 }
+
+export type SegmentoTextoLink =
+  | { tipo: 'texto'; valor: string }
+  | { tipo: 'link'; label: string; href: string };
+
+const URL_NO_TEXTO_RE = /(?:https?:\/\/|www\.)[^\s<>"'`]+/gi;
+const PONTUACAO_FINAL_RE = /[.,;:!?\]}>]+$/;
+
+/**
+ * Divide um texto (como a descrição de um Vídeo) em trechos de texto comum e links
+ * clicáveis seguros (`http:` / `https:`), removendo pontuação colada ao final da URL.
+ */
+export function segmentarTextoComLinks(texto: string): SegmentoTextoLink[] {
+  const normalizado = texto.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (!normalizado) return [];
+
+  const segmentos: SegmentoTextoLink[] = [];
+  let cursor = 0;
+
+  for (const match of normalizado.matchAll(URL_NO_TEXTO_RE)) {
+    const inicio = match.index ?? 0;
+    const bruto = match[0];
+
+    if (inicio > cursor) {
+      segmentos.push({ tipo: 'texto', valor: normalizado.slice(cursor, inicio) });
+    }
+
+    let urlTexto = bruto.replace(PONTUACAO_FINAL_RE, '');
+    // Remove ')' final sobrando quando não há '(' balanceado dentro da URL
+    while (urlTexto.endsWith(')')) {
+      const abertos = (urlTexto.match(/\(/g) ?? []).length;
+      const fechados = (urlTexto.match(/\)/g) ?? []).length;
+      if (fechados > abertos) {
+        urlTexto = urlTexto.slice(0, -1);
+      } else {
+        break;
+      }
+    }
+    const sobra = bruto.slice(urlTexto.length);
+
+    const candidatoHref = /^https?:\/\//i.test(urlTexto)
+      ? urlTexto
+      : `https://${urlTexto}`;
+
+    let hrefValido: string | null = null;
+    try {
+      const parsed = new URL(candidatoHref);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        hrefValido = parsed.href;
+      }
+    } catch {
+      hrefValido = null;
+    }
+
+    if (hrefValido) {
+      segmentos.push({ tipo: 'link', label: urlTexto, href: hrefValido });
+      if (sobra) segmentos.push({ tipo: 'texto', valor: sobra });
+    } else {
+      segmentos.push({ tipo: 'texto', valor: bruto });
+    }
+
+    cursor = inicio + bruto.length;
+  }
+
+  if (cursor < normalizado.length) {
+    segmentos.push({ tipo: 'texto', valor: normalizado.slice(cursor) });
+  }
+
+  return segmentos;
+}
