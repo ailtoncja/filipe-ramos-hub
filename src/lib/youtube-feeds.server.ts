@@ -4,7 +4,7 @@ import {
   parseYoutubeAtomFeed,
   parseYoutubeChannelPlaylistsHtml,
   type ResultadoSyncFeeds,
-  urlFeedDaFonte,
+  urlsFeedDaFonte,
 } from './youtube-feeds';
 
 const VIDEO_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutos para vídeos
@@ -77,14 +77,11 @@ async function buscarFeedsEmParalelo(
   forcar: boolean,
 ): Promise<ResultadoSyncFeeds> {
   const agoraIso = new Date().toISOString();
-  const alvos = FONTES.map((fonte) => ({ fonte, url: urlFeedDaFonte(fonte) })).filter(
-    (item): item is { fonte: (typeof FONTES)[number]; url: string } =>
-      Boolean(item.url),
-  );
+  const alvos = FONTES.flatMap((fonte) => urlsFeedDaFonte(fonte));
 
   const [resultadosFeeds, playlistsCanais] = await Promise.all([
     Promise.allSettled(
-      alvos.map(async ({ fonte, url }) => {
+      alvos.map(async ({ fonte, url, playlistId }) => {
         const response = await fetch(url, {
           signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
           cache: 'no-store',
@@ -92,7 +89,7 @@ async function buscarFeedsEmParalelo(
         });
         if (!response.ok) throw new Error(`Feed HTTP ${response.status}`);
         const xml = await response.text();
-        return { fonte, parsed: parseYoutubeAtomFeed(xml, fonte.nome) };
+        return { fonte, playlistId, parsed: parseYoutubeAtomFeed(xml, fonte.nome) };
       }),
     ),
     buscarPlaylistsDosCanais(forcar, agoraIso),
@@ -105,12 +102,12 @@ async function buscarFeedsEmParalelo(
   for (const res of resultadosFeeds) {
     if (res.status !== 'fulfilled') continue;
     fontesComSucesso++;
-    const { fonte, parsed } = res.value;
+    const { fonte, playlistId, parsed } = res.value;
     videos.push(...parsed.videos);
 
-    if (fonte.playlistId && parsed.videos.length > 0) {
+    if (playlistId && parsed.videos.length > 0) {
       playlistsAtualizadas.push({
-        id: fonte.playlistId,
+        id: playlistId,
         titulo: parsed.tituloFeed || fonte.nomeExibicao,
         descricao: fonte.descricao,
         canal: fonte.nomeExibicao,

@@ -72,6 +72,12 @@ export function parseYoutubeAtomFeed(
   return { tituloFeed, publicadoEmFeed, videos };
 }
 
+export interface AlvoFeedFonte {
+  fonte: Fonte;
+  url: string;
+  playlistId?: string;
+}
+
 export function urlFeedDaFonte(fonte: Fonte): string | null {
   if (fonte.playlistId) {
     return `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(fonte.playlistId)}`;
@@ -80,6 +86,19 @@ export function urlFeedDaFonte(fonte: Fonte): string | null {
     return `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(fonte.channelId)}`;
   }
   return null;
+}
+
+export function urlsFeedDaFonte(fonte: Fonte): AlvoFeedFonte[] {
+  if (fonte.playlistIds?.length) {
+    return fonte.playlistIds.map((playlistId) => ({
+      fonte,
+      playlistId,
+      url: `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(playlistId)}`,
+    }));
+  }
+  const url = urlFeedDaFonte(fonte);
+  if (!url) return [];
+  return [{ fonte, url, ...(fonte.playlistId ? { playlistId: fonte.playlistId } : {}) }];
 }
 
 export interface ResultadoSyncFeeds {

@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 const key = process.env.YOUTUBE_API_KEY;
 if (!key) throw new Error('Defina a variável YOUTUBE_API_KEY antes de atualizar o catálogo.');
 const source = await readFile(new URL('../src/data/fontes.ts', import.meta.url), 'utf8');
-const blocks = [...source.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'/g)];
+const blocks = [...source.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'[\s\S]*?\}/g)];
 if (!blocks.length) throw new Error('Nenhuma fonte encontrada em src/data/fontes.ts.');
 const api = async (endpoint, params) => {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${endpoint}`);
@@ -25,7 +25,40 @@ const addPlaylist = (item, name) => {
   }
   playlists.set(item.id, { id: item.id, titulo: snippet.title, descricao: snippet.description ?? '', canal: snippet.channelTitle || name, fontes: [name], publicadoEm: snippet.publishedAt, miniatura: snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '', quantidadeVideos: item.contentDetails?.itemCount ?? 0 });
 };
-for (const [, name, link] of blocks) {
+const coletarVideosDaPlaylist = async (playlistId, name) => {
+  let token;
+  do {
+    const params = { part: 'snippet,contentDetails', playlistId, maxResults: '50' };
+    if (token) params.pageToken = token;
+    const result = await api('playlistItems', params);
+    for (const item of result.items ?? []) {
+      const s = item.snippet;
+      const id = item.contentDetails?.videoId;
+      if (!id || !s || ['Private video', 'Deleted video'].includes(s.title)) continue;
+      const video = videos.get(id);
+      if (video) {
+        if (!video.fontes.includes(name)) video.fontes.push(name);
+      } else {
+        videos.set(id, { id, titulo: s.title, descricao: s.description ?? '', canal: s.videoOwnerChannelTitle || name, fontes: [name], publicadoEm: item.contentDetails?.videoPublishedAt || s.publishedAt, miniatura: s.thumbnails?.medium?.url || s.thumbnails?.default?.url || '' });
+      }
+    }
+    token = result.nextPageToken;
+  } while (token);
+};
+for (const [blockText, name, link] of blocks) {
+  const playlistIdsMatch = blockText.match(/playlistIds:\s*\[([\s\S]*?)\]/);
+  if (playlistIdsMatch) {
+    const idsList = [...playlistIdsMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    console.log(`Atualizando ${name} (${idsList.length} playlists)...`);
+    for (let i = 0; i < idsList.length; i += 50) {
+      const result = await api('playlists', { part: 'snippet,contentDetails', id: idsList.slice(i, i + 50).join(',') });
+      for (const item of result.items ?? []) addPlaylist(item, name);
+    }
+    for (const pid of idsList) {
+      await coletarVideosDaPlaylist(pid, name);
+    }
+    continue;
+  }
   const sourceUrl = new URL(link);
   let playlist = sourceUrl.searchParams.get('list');
   if (playlist) {
@@ -50,24 +83,7 @@ for (const [, name, link] of blocks) {
     } while (nextPage);
   }
   console.log(`Atualizando ${name}...`);
-  let token;
-  do {
-    const params = { part: 'snippet,contentDetails', playlistId: playlist, maxResults: '50' };
-    if (token) params.pageToken = token;
-    const result = await api('playlistItems', params);
-    for (const item of result.items ?? []) {
-      const s = item.snippet;
-      const id = item.contentDetails?.videoId;
-      if (!id || !s || ['Private video', 'Deleted video'].includes(s.title)) continue;
-      const video = videos.get(id);
-      if (video) {
-        if (!video.fontes.includes(name)) video.fontes.push(name);
-      } else {
-        videos.set(id, { id, titulo: s.title, descricao: s.description ?? '', canal: s.videoOwnerChannelTitle || name, fontes: [name], publicadoEm: item.contentDetails?.videoPublishedAt || s.publishedAt, miniatura: s.thumbnails?.medium?.url || s.thumbnails?.default?.url || '' });
-      }
-    }
-    token = result.nextPageToken;
-  } while (token);
+  await coletarVideosDaPlaylist(playlist, name);
 }
 // Busca as visualizações em lotes de até 50 vídeos por requisição.
 const ids = [...videos.keys()];

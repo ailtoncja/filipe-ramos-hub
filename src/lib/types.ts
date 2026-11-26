@@ -9,6 +9,7 @@ export interface Fonte {
   youtubeUrl: string;
   channelId?: string;
   playlistId?: string;
+  playlistIds?: string[];
 }
 
 export interface VideoCatalogo {

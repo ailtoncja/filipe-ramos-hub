@@ -329,15 +329,20 @@ describe('catalog helpers', () => {
     expect(deduplicado).toEqual([]);
   });
 
-  it('extrai todas as fontes com o mesmo regex do script atualizar-videos.mjs', () => {
+  it('extrai todas as fontes e playlistIds com o mesmo regex do script atualizar-videos.mjs', () => {
     const fonteFile = readFileSync(
       path.join(process.cwd(), 'src', 'data', 'fontes.ts'),
       'utf8',
     );
     const matches = [
-      ...fonteFile.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'/g),
+      ...fonteFile.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'[\s\S]*?\}/g),
     ];
     expect(matches).toHaveLength(FONTES.length);
+    const divine = matches.find((m) => m[1] === '@allglorythegod');
+    expect(divine).toBeDefined();
+    const listMatch = divine?.[0].match(/playlistIds:\s*\[([\s\S]*?)\]/);
+    const ids = [...(listMatch?.[1].matchAll(/'([^']+)'/g) ?? [])].map((m) => m[1]);
+    expect(ids).toHaveLength(22);
   });
 });
 
