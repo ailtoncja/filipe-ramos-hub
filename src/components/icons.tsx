@@ -154,3 +154,87 @@ export function RefreshIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function BookmarkIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true" {...props}>
+      <path d="M5.5 3.75h9a1 1 0 0 1 1 1v11.75L10 13.25 4.5 16.5V4.75a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function BookmarkFilledIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M5.5 3.25h9a1.5 1.5 0 0 1 1.5 1.5v12.1a.5.5 0 0 1-.76.43L10 14.1l-5.24 3.18a.5.5 0 0 1-.76-.43V4.75a1.5 1.5 0 0 1 1.5-1.5Z" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true" {...props}>
+      <circle cx="10" cy="10" r="6.75" />
+      <path d="m7.25 10.25 2 2 3.75-4.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function HistoryIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true" {...props}>
+      <path d="M3.75 10a6.25 6.25 0 1 0 1.85-4.45L3.75 7.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.75 3.75v3.65h3.65" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 6.75V10l2.5 1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function TwitchIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M4.2 2.5 2.5 5.6v10.2h3.7v2.2l2.4-2.2h3l5.9-5.6V2.5H4.2Zm11.8 7-2.6 2.5h-3.4l-2.3 2.1V12H5.1V4h10.9v5.5Zm-2.5-3.4v3.4h-1.4V6.1h1.4Zm-3.6 0v3.4H8.5V6.1h1.4Z" />
+    </svg>
+  );
+}
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true" {...props}>
+      <path d="M10 4.25v11.5M4.25 10h11.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function QueueListIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true" {...props}>
+      <path d="M3.5 5.5h13M3.5 10h9M3.5 14.5h6.5" strokeLinecap="round" />
+      <path d="M14.5 11.5v5M12 14h5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ChevronUpIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden="true" {...props}>
+      <path d="m5.5 12.25 4.5-4.5 4.5 4.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden="true" {...props}>
+      <path d="m5.5 7.75 4.5 4.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true" {...props}>
+      <path d="M4.25 5.75h11.5M7.75 5.75V4.25h4.5v1.5M6 5.75l.65 10h6.7l.65-10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

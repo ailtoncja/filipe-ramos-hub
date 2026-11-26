@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { LISTA_OFICIAL_MODS_URL } from '@/data/care-packages';
+import { TWITCH_CANAL_URL } from '@/lib/twitch';
 import { ArrowUpIcon, ExternalLinkIcon } from './icons';
 
 export function SiteFooter() {
@@ -36,6 +37,15 @@ export function SiteFooter() {
             className="inline-flex min-h-11 items-center gap-1.5 text-[var(--ink-secondary)] transition-colors hover:text-[var(--accent-text)]"
           >
             Lista oficial de mods
+            <ExternalLinkIcon className="h-3.5 w-3.5" />
+          </a>
+          <a
+            href={TWITCH_CANAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-1.5 text-[var(--ink-secondary)] transition-colors hover:text-[var(--accent-text)]"
+          >
+            Twitch
             <ExternalLinkIcon className="h-3.5 w-3.5" />
           </a>
           <a

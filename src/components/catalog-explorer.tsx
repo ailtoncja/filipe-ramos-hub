@@ -17,30 +17,58 @@ import {
   FONTES_OFICIAIS_SET,
   nomeExibicaoDaFonte,
 } from '@/data/fontes';
+import { JOGOS_DESTAQUE } from '@/data/jogos-destaque';
+import { useBibliotecaLocal } from '@/hooks/use-biblioteca-local';
+import { filtrarCarePackages } from '@/lib/care-packages';
 import { filtrarCatalogo, mesclarExtrasCatalogo } from '@/lib/catalog';
+import { normalizarParaBusca } from '@/lib/search';
+import {
+  encontrarSequenciaDoVideo,
+  montarUrlMaratona,
+  ordenarVideosParaMaratona,
+} from '@/lib/sequencias';
 import { formatarDataBR, formatarNumero } from '@/lib/text';
 import type {
   Catalogo,
   FiltroCategoriaFonte,
   OrdemCatalogo,
   PlaylistCatalogo,
+  StatusTransmissaoTwitch,
   TipoCatalogo,
   VideoCatalogo,
 } from '@/lib/types';
 import { urlYoutubeDoItem } from '@/lib/youtube';
 import {
+  CarePackageContextBanner,
+  TwitchLastStreamPill,
+  TwitchLiveBanner,
+} from './catalog-highlights';
+import {
   ArrowRightIcon,
+  BookmarkFilledIcon,
+  BookmarkIcon,
+  CheckCircleIcon,
+  CheckIcon,
   CloseIcon,
   ExternalLinkIcon,
+  HistoryIcon,
+  LinkChainIcon,
   ListVideoIcon,
   PackageIcon,
   PlayIcon,
+  PlusIcon,
+  QueueListIcon,
   RefreshIcon,
   SearchIcon,
 } from './icons';
 
 const VideoPlayerModal = dynamic(
   () => import('./video-player-modal').then((mod) => mod.VideoPlayerModal),
+  { ssr: false },
+);
+
+const MaratonasModal = dynamic(
+  () => import('./maratonas-modal').then((mod) => mod.MaratonasModal),
   { ssr: false },
 );
 
@@ -101,6 +129,9 @@ interface CatalogExplorerProps {
   initialCategoriaFonte: FiltroCategoriaFonte;
   initialOrdem: OrdemCatalogo;
   initialPlayItem: VideoCatalogo | PlaylistCatalogo | null;
+  initialMaratonaVideos: VideoCatalogo[];
+  initialMaratonaTitulo: string | null;
+  initialTwitchStatus: StatusTransmissaoTwitch | null;
 }
 
 export function CatalogExplorer({
@@ -118,24 +149,71 @@ export function CatalogExplorer({
   initialCategoriaFonte,
   initialOrdem,
   initialPlayItem,
+  initialMaratonaVideos,
+  initialMaratonaTitulo,
+  initialTwitchStatus,
 }: CatalogExplorerProps) {
   const [catalogoCompleto, setCatalogoCompleto] = useState<Catalogo | null>(null);
   const [erroCarga, setErroCarga] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
   const [avisoAtualizacao, setAvisoAtualizacao] = useState<string | null>(null);
+  const [twitchStatus, setTwitchStatus] = useState<StatusTransmissaoTwitch | null>(
+    initialTwitchStatus,
+  );
 
-  const [tipo, setTipo] = useState<TipoCatalogo>(initialTipo);
+  const [tipo, setTipo] = useState<TipoCatalogo>(
+    initialMaratonaVideos.length > 0 ? 'videos' : initialTipo,
+  );
   const [busca, setBusca] = useState(initialBusca);
   const [fonte, setFonte] = useState(initialFonte);
   const [categoriaFonte, setCategoriaFonte] = useState<FiltroCategoriaFonte>(
     initialCategoriaFonte,
   );
   const [ordem, setOrdem] = useState<OrdemCatalogo>(initialOrdem);
+  const [apenasSalvos, setApenasSalvos] = useState(false);
+  const [ocultarAssistidos, setOcultarAssistidos] = useState(false);
   const [limite, setLimite] = useState(PAGE_SIZE);
   const [itemEmReproducao, setItemEmReproducao] = useState<
     VideoCatalogo | PlaylistCatalogo | null
   >(initialPlayItem);
+  const [maratonaAtiva, setMaratonaAtiva] = useState<{
+    titulo: string;
+    videos: VideoCatalogo[];
+  } | null>(() =>
+    initialMaratonaVideos.length > 0
+      ? {
+          titulo: initialMaratonaTitulo ?? 'Maratona compartilhada',
+          videos: initialMaratonaVideos,
+        }
+      : null,
+  );
+  const [modalMaratonasAberto, setModalMaratonasAberto] = useState(false);
+  const [tituloInicialModalMaratona, setTituloInicialModalMaratona] = useState('');
+  const [linkFilaCopiado, setLinkFilaCopiado] = useState(false);
   const [, startTransition] = useTransition();
+
+  const {
+    salvosVideosSet,
+    salvosPlaylistsSet,
+    assistidosVideosSet,
+    filaAtual,
+    filaAtualSet,
+    maratonas,
+    recentes,
+    totalSalvosVideos,
+    totalSalvosPlaylists,
+    totalAssistidos,
+    toggleSalvo,
+    toggleAssistido,
+    registrarAbertura,
+    limparHistoricoRecente,
+    toggleNaFila,
+    carregarNaFila,
+    moverItemFila,
+    limparFila,
+    criarMaratona,
+    excluirMaratona,
+  } = useBibliotecaLocal();
 
   const buscaDiferida = useDeferredValue(busca);
 
@@ -151,6 +229,12 @@ export function CatalogExplorer({
 
     function aoVoltarParaAba() {
       if (document.visibilityState !== 'visible') return;
+      fetch('/api/twitch')
+        .then((r) => (r.ok ? (r.json() as Promise<{ status: StatusTransmissaoTwitch | null }>) : null))
+        .then((json) => {
+          if (ativo && json?.status) setTwitchStatus(json.status);
+        })
+        .catch(() => {});
       if (Date.now() - ultimaSincronizacaoCliente < 3 * 60 * 1000) return;
       carregarCatalogoCliente(false)
         .then((dados) => {
@@ -211,16 +295,24 @@ export function CatalogExplorer({
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (busca.trim()) params.set('q', busca.trim());
-    if (tipo === 'playlists') params.set('tipo', 'playlists');
-    if (fonte) params.set('fonte', fonte);
-    if (categoriaFonte !== 'todos') params.set('canais', categoriaFonte);
-    if (ordem !== 'recentes') params.set('ordem', ordem);
-    if (itemEmReproducao) params.set('play', itemEmReproducao.id);
+    if (maratonaAtiva && itemEmReproducao) {
+      params.set(
+        'maratona',
+        maratonaAtiva.videos.map((v) => v.id).join(','),
+      );
+      if (maratonaAtiva.titulo) params.set('titulo', maratonaAtiva.titulo);
+    } else {
+      if (busca.trim()) params.set('q', busca.trim());
+      if (tipo === 'playlists') params.set('tipo', 'playlists');
+      if (fonte) params.set('fonte', fonte);
+      if (categoriaFonte !== 'todos') params.set('canais', categoriaFonte);
+      if (ordem !== 'recentes') params.set('ordem', ordem);
+      if (itemEmReproducao) params.set('play', itemEmReproducao.id);
+    }
 
     const qs = params.toString();
     window.history.replaceState(null, '', qs ? `/?${qs}` : '/');
-  }, [busca, tipo, fonte, categoriaFonte, ordem, itemEmReproducao]);
+  }, [busca, tipo, fonte, categoriaFonte, ordem, itemEmReproducao, maratonaAtiva]);
 
   const resultadosFiltrados = useMemo(() => {
     if (!catalogoCompleto) return null;
@@ -245,21 +337,189 @@ export function CatalogExplorer({
   }, [catalogoCompleto, spotlightVideo]);
 
   const temFiltrosAtivos = Boolean(
-    busca.trim() || fonte || categoriaFonte !== 'todos' || ordem !== 'recentes',
+    busca.trim() ||
+      fonte ||
+      categoriaFonte !== 'todos' ||
+      ordem !== 'recentes' ||
+      apenasSalvos ||
+      (tipo === 'videos' && ocultarAssistidos),
   );
   const mostrarDestaque = Boolean(
     spotlightAtual && tipo === 'videos' && !temFiltrosAtivos,
   );
 
-  const itensBase = resultadosFiltrados ? resultadosFiltrados : initialItems;
+  const salvosAtuaisSet = tipo === 'playlists' ? salvosPlaylistsSet : salvosVideosSet;
+  const totalSalvosAtual =
+    tipo === 'playlists' ? totalSalvosPlaylists : totalSalvosVideos;
+
+  const itensComPreferencias = useMemo(() => {
+    const base = resultadosFiltrados ? resultadosFiltrados : initialItems;
+    if (!apenasSalvos && !(tipo === 'videos' && ocultarAssistidos)) {
+      return base;
+    }
+    return base.filter((item) => {
+      if (apenasSalvos && !salvosAtuaisSet.has(item.id)) return false;
+      if (tipo === 'videos' && ocultarAssistidos && assistidosVideosSet.has(item.id)) {
+        return false;
+      }
+      return true;
+    });
+  }, [
+    resultadosFiltrados,
+    initialItems,
+    apenasSalvos,
+    ocultarAssistidos,
+    tipo,
+    salvosAtuaisSet,
+    assistidosVideosSet,
+  ]);
+
   const itensSemDuplicata =
     mostrarDestaque && spotlightAtual
-      ? itensBase.filter((item) => item.id !== spotlightAtual.id)
-      : itensBase;
+      ? itensComPreferencias.filter((item) => item.id !== spotlightAtual.id)
+      : itensComPreferencias;
   const itensVisiveis = itensSemDuplicata.slice(0, limite);
-  const totalResultados = resultadosFiltrados
-    ? resultadosFiltrados.length
-    : initialTotal;
+  const totalResultados =
+    apenasSalvos || (tipo === 'videos' && ocultarAssistidos)
+      ? itensComPreferencias.length
+      : resultadosFiltrados
+        ? resultadosFiltrados.length
+        : initialTotal;
+
+  const carePackagesRelacionados = useMemo(() => {
+    if (!buscaDiferida.trim()) return [];
+    return filtrarCarePackages(buscaDiferida, new Set());
+  }, [buscaDiferida]);
+
+  const buscaNormalizada = useMemo(
+    () => normalizarParaBusca(busca),
+    [busca],
+  );
+
+  const itensRecentesResolvidos = useMemo(() => {
+    if (recentes.length === 0) return [];
+    const videosMap = new Map<string, VideoCatalogo>();
+    const playlistsMap = new Map<string, PlaylistCatalogo>();
+    if (catalogoCompleto) {
+      for (const v of catalogoCompleto.videos) videosMap.set(v.id, v);
+      for (const p of catalogoCompleto.playlists) playlistsMap.set(p.id, p);
+    } else {
+      for (const item of initialItems) {
+        if ('quantidadeVideos' in item) {
+          playlistsMap.set(item.id, item);
+        } else {
+          videosMap.set(item.id, item);
+        }
+      }
+      if (spotlightVideo) videosMap.set(spotlightVideo.id, spotlightVideo);
+    }
+    const resolvidos: {
+      item: VideoCatalogo | PlaylistCatalogo;
+      tipo: TipoCatalogo;
+    }[] = [];
+    for (const r of recentes) {
+      const encontrado =
+        r.tipo === 'playlists' ? playlistsMap.get(r.id) : videosMap.get(r.id);
+      if (encontrado) resolvidos.push({ item: encontrado, tipo: r.tipo });
+    }
+    return resolvidos;
+  }, [recentes, catalogoCompleto, initialItems, spotlightVideo]);
+
+  const videosPorId = useMemo(() => {
+    const mapa = new Map<string, VideoCatalogo>();
+    if (catalogoCompleto) {
+      for (const v of catalogoCompleto.videos) mapa.set(v.id, v);
+    } else {
+      for (const item of initialItems) {
+        if (!('quantidadeVideos' in item)) mapa.set(item.id, item);
+      }
+      if (spotlightVideo) mapa.set(spotlightVideo.id, spotlightVideo);
+      for (const v of initialMaratonaVideos) mapa.set(v.id, v);
+    }
+    return mapa;
+  }, [catalogoCompleto, initialItems, spotlightVideo, initialMaratonaVideos]);
+
+  const filaVideosResolvidos = useMemo(
+    () =>
+      filaAtual
+        .map((id) => videosPorId.get(id))
+        .filter((v): v is VideoCatalogo => Boolean(v)),
+    [filaAtual, videosPorId],
+  );
+
+  const sequenciaNoPlayer = useMemo(() => {
+    if (!itemEmReproducao || tipo !== 'videos') return [];
+    if (maratonaAtiva) return maratonaAtiva.videos;
+    const pool = catalogoCompleto
+      ? catalogoCompleto.videos
+      : [...videosPorId.values()];
+    return encontrarSequenciaDoVideo(itemEmReproducao, pool);
+  }, [itemEmReproducao, tipo, maratonaAtiva, catalogoCompleto, videosPorId]);
+
+  const abrirNoPlayer = useCallback(
+    (item: VideoCatalogo | PlaylistCatalogo, tipoItem: TipoCatalogo) => {
+      if (tipoItem !== tipo) {
+        setTipo(tipoItem);
+      }
+      setMaratonaAtiva(null);
+      setItemEmReproducao(item);
+      registrarAbertura(item.id, tipoItem);
+    },
+    [tipo, registrarAbertura],
+  );
+
+  const abrirMaratonaNoPlayer = useCallback(
+    (videos: VideoCatalogo[], titulo: string) => {
+      if (videos.length === 0) return;
+      setTipo('videos');
+      setModalMaratonasAberto(false);
+      setMaratonaAtiva({ titulo, videos });
+      setItemEmReproducao(videos[0]);
+      registrarAbertura(videos[0].id, 'videos');
+    },
+    [registrarAbertura],
+  );
+
+  const maratonarResultadosEmOrdem = useCallback(() => {
+    if (tipo !== 'videos') return;
+    const somenteVideos = itensComPreferencias.filter(
+      (item): item is VideoCatalogo => !('quantidadeVideos' in item),
+    );
+    const ordenados = ordenarVideosParaMaratona(somenteVideos);
+    if (ordenados.length < 2) return;
+    const titulo = busca.trim()
+      ? `${busca.trim()} em ordem`
+      : fonte
+        ? `${nomeExibicaoDaFonte(fonte)} em ordem`
+        : 'Maratona em ordem';
+    abrirMaratonaNoPlayer(ordenados, titulo);
+  }, [tipo, itensComPreferencias, busca, fonte, abrirMaratonaNoPlayer]);
+
+  const abrirEditorComSequencia = useCallback(
+    (videos: VideoCatalogo[], titulo: string) => {
+      carregarNaFila(videos.map((v) => v.id));
+      setTituloInicialModalMaratona(titulo);
+      setItemEmReproducao(null);
+      setMaratonaAtiva(null);
+      setModalMaratonasAberto(true);
+    },
+    [carregarNaFila],
+  );
+
+  const copiarLinkFilaAtual = useCallback(async () => {
+    if (filaAtual.length === 0) return;
+    try {
+      const url = `${window.location.origin}${montarUrlMaratona(
+        filaAtual,
+        `Maratona (${filaAtual.length} vídeos)`,
+      )}`;
+      await navigator.clipboard.writeText(url);
+      setLinkFilaCopiado(true);
+      window.setTimeout(() => setLinkFilaCopiado(false), 2000);
+    } catch {
+      // clipboard indisponível
+    }
+  }, [filaAtual]);
 
   const trocarTipo = useCallback((novoTipo: TipoCatalogo) => {
     startTransition(() => {
@@ -297,12 +557,16 @@ export function CatalogExplorer({
       setFonte('');
       setCategoriaFonte('todos');
       setOrdem('recentes');
+      setApenasSalvos(false);
+      setOcultarAssistidos(false);
       setLimite(PAGE_SIZE);
     });
   }, []);
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-6 sm:px-6 sm:pt-8 lg:px-10">
+      <TwitchLiveBanner status={twitchStatus} />
+
       {/* Destaque cinematográfico compacto — recolhe automaticamente quando o usuário filtra ou busca */}
       {mostrarDestaque && spotlightAtual ? (
         <section className="hero-enter spotlight-frame overflow-hidden rounded-2xl p-5 sm:p-7 lg:p-8">
@@ -329,7 +593,7 @@ export function CatalogExplorer({
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setItemEmReproducao(spotlightAtual)}
+                  onClick={() => abrirNoPlayer(spotlightAtual, 'videos')}
                   className="btn-primary inline-flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl px-6 text-sm font-semibold"
                 >
                   <PlayIcon className="h-4 w-4" />
@@ -344,11 +608,13 @@ export function CatalogExplorer({
                   <ArrowRightIcon className="h-4 w-4" />
                 </Link>
               </div>
+
+              <TwitchLastStreamPill status={twitchStatus} />
             </div>
 
             <button
               type="button"
-              onClick={() => setItemEmReproducao(spotlightAtual)}
+              onClick={() => abrirNoPlayer(spotlightAtual, 'videos')}
               aria-label={`Assistir ${spotlightAtual.titulo}`}
               className="group relative aspect-video w-full cursor-pointer overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--player-bg)] text-left shadow-[var(--shadow-lift)] focus-visible:outline-offset-2"
             >
@@ -562,12 +828,48 @@ export function CatalogExplorer({
           </div>
         </div>
 
-        {/* Resumo dos resultados e filtro rápido de canais oficiais / não oficiais */}
+        {/* Atalhos rápidos dos 12 Jogos em destaque */}
+        <div
+          aria-label="Jogos em destaque"
+          className="-mx-4 mt-3.5 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+        >
+          {JOGOS_DESTAQUE.map((jogo) => {
+            const ativo =
+              buscaNormalizada.length > 0 &&
+              buscaNormalizada === normalizarParaBusca(jogo.busca);
+            return (
+              <button
+                key={jogo.label}
+                type="button"
+                onClick={() => {
+                  setBusca(ativo ? '' : jogo.busca);
+                  setLimite(PAGE_SIZE);
+                }}
+                aria-pressed={ativo}
+                className={`min-h-9 shrink-0 cursor-pointer whitespace-nowrap rounded-full border px-3.5 text-xs font-semibold transition-colors ${
+                  ativo
+                    ? 'border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)]'
+                    : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'
+                }`}
+              >
+                {jogo.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Banner contextual de Care Packages quando a busca bate em um Jogo */}
+        <CarePackageContextBanner
+          matches={carePackagesRelacionados}
+          busca={buscaDiferida}
+        />
+
+        {/* Resumo dos resultados e filtros rápidos */}
         <div
           aria-live="polite"
           className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--ink-muted)] tabular-nums"
         >
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div
               role="group"
               aria-label="Filtrar por tipo de canal"
@@ -612,6 +914,65 @@ export function CatalogExplorer({
               })}
             </div>
 
+            <button
+              type="button"
+              onClick={() => {
+                setApenasSalvos((v) => !v);
+                setLimite(PAGE_SIZE);
+              }}
+              aria-pressed={apenasSalvos}
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 text-xs font-semibold transition-colors ${
+                apenasSalvos
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'
+              }`}
+            >
+              {apenasSalvos ? (
+                <BookmarkFilledIcon className="h-3.5 w-3.5" />
+              ) : (
+                <BookmarkIcon className="h-3.5 w-3.5" />
+              )}
+              Salvos{totalSalvosAtual > 0 ? ` (${totalSalvosAtual})` : ''}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTituloInicialModalMaratona('');
+                setModalMaratonasAberto(true);
+              }}
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 text-xs font-semibold transition-colors ${
+                filaAtual.length > 0
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <QueueListIcon className="h-3.5 w-3.5" />
+              Maratonas
+              {maratonas.length > 0 || filaAtual.length > 0
+                ? ` (${maratonas.length}${filaAtual.length > 0 ? ` + ${filaAtual.length}` : ''})`
+                : ''}
+            </button>
+
+            {tipo === 'videos' && (totalAssistidos > 0 || ocultarAssistidos) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setOcultarAssistidos((v) => !v);
+                  setLimite(PAGE_SIZE);
+                }}
+                aria-pressed={ocultarAssistidos}
+                className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 text-xs font-semibold transition-colors ${
+                  ocultarAssistidos
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                    : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'
+                }`}
+              >
+                <CheckCircleIcon className="h-3.5 w-3.5" />
+                Ocultar assistidos ({totalAssistidos})
+              </button>
+            ) : null}
+
             {erroCarga ? (
               <span className="text-[var(--warn-ink)]">
                 Não foi possível carregar o índice completo. Exibindo resultados iniciais.
@@ -641,7 +1002,19 @@ export function CatalogExplorer({
             ) : null}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {tipo === 'videos' &&
+            (busca.trim() || fonte || apenasSalvos) &&
+            itensComPreferencias.length >= 2 ? (
+              <button
+                type="button"
+                onClick={maratonarResultadosEmOrdem}
+                className="btn-primary inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3.5 text-xs font-semibold"
+              >
+                <PlayIcon className="h-3.5 w-3.5" />
+                Maratonar em ordem ({Math.min(itensComPreferencias.length, 50)})
+              </button>
+            ) : null}
             {avisoAtualizacao ? (
               <span className="text-xs font-medium text-[var(--accent-text)]">
                 {avisoAtualizacao}
@@ -662,14 +1035,71 @@ export function CatalogExplorer({
         </div>
       </section>
 
+      {/* Faixa Continuar assistindo (histórico local automático dos últimos 4 abertos) */}
+      {!temFiltrosAtivos && itensRecentesResolvidos.length > 0 ? (
+        <section aria-label="Continuar assistindo" className="mt-6">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
+              <HistoryIcon className="h-4 w-4 text-[var(--accent-text)]" />
+              Continuar assistindo
+            </h2>
+            <button
+              type="button"
+              onClick={limparHistoricoRecente}
+              className="min-h-9 cursor-pointer px-2 text-xs font-medium text-[var(--ink-muted)] hover:text-[var(--accent-text)] hover:underline"
+            >
+              Limpar histórico
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {itensRecentesResolvidos.map(({ item, tipo: tipoRecente }) => (
+              <button
+                key={`${tipoRecente}:${item.id}`}
+                type="button"
+                onClick={() => abrirNoPlayer(item, tipoRecente)}
+                className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition-colors hover:border-[var(--accent)]"
+              >
+                <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-[var(--player-bg)]">
+                  {item.miniatura ? (
+                    <img
+                      src={item.miniatura}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : null}
+                  {tipoRecente === 'playlists' ? (
+                    <span className="absolute bottom-1 right-1 rounded bg-[var(--overlay-surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--overlay-ink)]">
+                      Playlist
+                    </span>
+                  ) : null}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-xs font-semibold leading-snug text-[var(--ink)] group-hover:text-[var(--accent-text)]">
+                    {item.titulo}
+                  </p>
+                  <p className="mt-1 truncate text-[11px] text-[var(--ink-muted)]">
+                    {nomeExibicaoDaFonte(item.canal)}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* Grade espaçada de vídeos e playlists */}
       {itensVisiveis.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
           <p className="heading-display text-xl font-bold text-[var(--ink)]">
-            Nenhum resultado encontrado
+            {apenasSalvos
+              ? `Nenhum ${tipo === 'videos' ? 'vídeo' : 'playlist'} salvo ainda`
+              : 'Nenhum resultado encontrado'}
           </p>
           <p className="mt-2 text-sm text-[var(--ink-secondary)]">
-            Tente outro termo, escolha outra fonte ou alterne entre Vídeos e Playlists.
+            {apenasSalvos
+              ? 'Clique no ícone de marcador em qualquer card ou no player para guardar itens para ver depois.'
+              : 'Tente outro termo, escolha outra fonte ou alterne entre Vídeos e Playlists.'}
           </p>
           {temFiltrosAtivos ? (
             <button
@@ -685,6 +1115,8 @@ export function CatalogExplorer({
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {itensVisiveis.map((item) => {
             const oficial = ehFonteOficial(item.fontes);
+            const salvo = salvosAtuaisSet.has(item.id);
+            const assistido = tipo === 'videos' && assistidosVideosSet.has(item.id);
             const qtdVideos =
               'quantidadeVideos' in item && typeof item.quantidadeVideos === 'number'
                 ? item.quantidadeVideos
@@ -698,7 +1130,7 @@ export function CatalogExplorer({
               >
                 <button
                   type="button"
-                  onClick={() => setItemEmReproducao(item)}
+                  onClick={() => abrirNoPlayer(item, tipo)}
                   className="flex flex-1 cursor-pointer flex-col text-left focus-visible:outline-offset-[-3px]"
                 >
                   <div className="relative aspect-video w-full overflow-hidden bg-[var(--player-bg)]">
@@ -707,8 +1139,16 @@ export function CatalogExplorer({
                         src={item.miniatura}
                         alt=""
                         loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
+                          assistido ? 'opacity-75' : ''
+                        }`}
                       />
+                    ) : null}
+                    {assistido ? (
+                      <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full border border-[var(--overlay-border)] bg-[var(--overlay-surface)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--overlay-ink)]">
+                        <CheckCircleIcon className="h-3 w-3 text-[var(--accent-text)]" />
+                        Assistido
+                      </span>
                     ) : null}
                     {tipo === 'playlists' ? (
                       <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1.5 rounded-full border border-[var(--overlay-border)] bg-[var(--overlay-surface)] px-3 py-1 text-xs font-semibold text-[var(--overlay-ink)]">
@@ -755,15 +1195,91 @@ export function CatalogExplorer({
                     ) : null}
                   </div>
 
-                  <a
-                    href={ytUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Abrir "${item.titulo}" no YouTube`}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-elevated)] hover:text-[var(--accent-text)]"
-                  >
-                    <ExternalLinkIcon className="h-4 w-4" />
-                  </a>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    {tipo === 'videos' ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleNaFila(item.id)}
+                        aria-pressed={filaAtualSet.has(item.id)}
+                        aria-label={
+                          filaAtualSet.has(item.id)
+                            ? `Remover "${item.titulo}" da fila de maratona`
+                            : `Adicionar "${item.titulo}" à fila de maratona`
+                        }
+                        title={
+                          filaAtualSet.has(item.id)
+                            ? 'Na fila da Maratona'
+                            : 'Adicionar à fila da Maratona'
+                        }
+                        className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors hover:bg-[var(--surface-elevated)] ${
+                          filaAtualSet.has(item.id)
+                            ? 'text-[var(--accent-text)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--accent-text)]'
+                        }`}
+                      >
+                        {filaAtualSet.has(item.id) ? (
+                          <CheckIcon className="h-4 w-4" />
+                        ) : (
+                          <PlusIcon className="h-4 w-4" />
+                        )}
+                      </button>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => toggleSalvo(item.id, tipo)}
+                      aria-pressed={salvo}
+                      aria-label={
+                        salvo
+                          ? `Remover "${item.titulo}" dos salvos`
+                          : `Salvar "${item.titulo}" para depois`
+                      }
+                      title={salvo ? 'Salvo' : 'Salvar para depois'}
+                      className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors hover:bg-[var(--surface-elevated)] ${
+                        salvo
+                          ? 'text-[var(--accent-text)]'
+                          : 'text-[var(--ink-muted)] hover:text-[var(--accent-text)]'
+                      }`}
+                    >
+                      {salvo ? (
+                        <BookmarkFilledIcon className="h-4 w-4" />
+                      ) : (
+                        <BookmarkIcon className="h-4 w-4" />
+                      )}
+                    </button>
+
+                    {tipo === 'videos' ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleAssistido(item.id)}
+                        aria-pressed={assistido}
+                        aria-label={
+                          assistido
+                            ? `Desmarcar "${item.titulo}" como assistido`
+                            : `Marcar "${item.titulo}" como assistido`
+                        }
+                        title={assistido ? 'Assistido' : 'Marcar como assistido'}
+                        className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-colors hover:bg-[var(--surface-elevated)] ${
+                          assistido
+                            ? 'text-[var(--accent-text)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--accent-text)]'
+                        }`}
+                      >
+                        <CheckCircleIcon className="h-4 w-4" />
+                      </button>
+                    ) : null}
+
+                    <a
+                      href={ytUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Abrir "${item.titulo}" no YouTube`}
+                      title="Abrir no YouTube"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-elevated)] hover:text-[var(--accent-text)]"
+                    >
+                      <ExternalLinkIcon className="h-4 w-4" />
+                    </a>
+                  </div>
                 </div>
               </article>
             );
@@ -786,11 +1302,124 @@ export function CatalogExplorer({
         </div>
       ) : null}
 
+      {/* Barra flutuante compacta enquanto o usuário monta uma fila */}
+      {filaVideosResolvidos.length > 0 && !itemEmReproducao && !modalMaratonasAberto ? (
+        <div
+          role="region"
+          aria-label="Fila da Maratona atual"
+          className="fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-1.5rem)] max-w-2xl -translate-x-1/2 flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-[var(--accent)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-lift)]"
+        >
+          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--ink)] tabular-nums">
+            <QueueListIcon className="h-4 w-4 text-[var(--accent-text)]" />
+            <span>
+              Fila: {filaVideosResolvidos.length}{' '}
+              {filaVideosResolvidos.length === 1 ? 'vídeo' : 'vídeos'}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                abrirMaratonaNoPlayer(
+                  filaVideosResolvidos,
+                  `Maratona (${filaVideosResolvidos.length} vídeos)`,
+                )
+              }
+              className="btn-primary inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold"
+            >
+              <PlayIcon className="h-3.5 w-3.5" />
+              Assistir
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTituloInicialModalMaratona('');
+                setModalMaratonasAberto(true);
+              }}
+              className="btn-secondary inline-flex min-h-9 cursor-pointer items-center rounded-xl px-3 text-xs font-semibold"
+            >
+              Organizar / Salvar
+            </button>
+            <button
+              type="button"
+              onClick={copiarLinkFilaAtual}
+              className="btn-secondary inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-xs font-semibold"
+            >
+              {linkFilaCopiado ? (
+                <>
+                  <CheckIcon className="h-3.5 w-3.5 text-[var(--accent-text)]" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <LinkChainIcon className="h-3.5 w-3.5" />
+                  Link
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={limparFila}
+              aria-label="Limpar fila atual"
+              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-[var(--ink-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--ink)]"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {modalMaratonasAberto ? (
+        <MaratonasModal
+          filaVideos={filaVideosResolvidos}
+          maratonas={maratonas}
+          videosPorId={videosPorId}
+          tituloInicial={tituloInicialModalMaratona}
+          onMoverNaFila={moverItemFila}
+          onRemoverDaFila={toggleNaFila}
+          onLimparFila={limparFila}
+          onAssistirLista={abrirMaratonaNoPlayer}
+          onSalvarMaratona={criarMaratona}
+          onCarregarNaFila={(ids, nome) => {
+            carregarNaFila(ids);
+            setTituloInicialModalMaratona(nome);
+          }}
+          onExcluirMaratona={excluirMaratona}
+          onClose={() => setModalMaratonasAberto(false)}
+        />
+      ) : null}
+
       {itemEmReproducao ? (
         <VideoPlayerModal
           item={itemEmReproducao}
           tipo={tipo}
-          onClose={() => setItemEmReproducao(null)}
+          salvo={salvosAtuaisSet.has(itemEmReproducao.id)}
+          assistido={
+            tipo === 'videos' && assistidosVideosSet.has(itemEmReproducao.id)
+          }
+          naFila={tipo === 'videos' && filaAtualSet.has(itemEmReproducao.id)}
+          assistidosSet={assistidosVideosSet}
+          sequencia={sequenciaNoPlayer}
+          tituloSequencia={maratonaAtiva?.titulo}
+          ehMaratona={Boolean(maratonaAtiva)}
+          onToggleSalvo={() => toggleSalvo(itemEmReproducao.id, tipo)}
+          onToggleAssistido={() => toggleAssistido(itemEmReproducao.id)}
+          onToggleFila={() => toggleNaFila(itemEmReproducao.id)}
+          onSelecionarEpisodio={(video) => {
+            setItemEmReproducao(video);
+            registrarAbertura(video.id, 'videos');
+          }}
+          onEditarComoMaratona={abrirEditorComSequencia}
+          onSalvarMaratona={(videos, titulo) =>
+            criarMaratona(
+              titulo,
+              videos.map((v) => v.id),
+            )
+          }
+          onClose={() => {
+            setItemEmReproducao(null);
+            setMaratonaAtiva(null);
+          }}
         />
       ) : null}
     </div>

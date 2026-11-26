@@ -3,10 +3,32 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { FONTES } from '@/data/fontes';
 import {
+  alternarAssistido,
+  alternarNaFila,
+  alternarSalvo,
+  BIBLIOTECA_VAZIA,
+  limparRecentesBiblioteca,
+  moverNaFila,
+  parsearBibliotecaLocal,
+  registrarRecente,
+  removerMaratonaLocal,
+  salvarMaratonaLocal,
+} from './biblioteca-local';
+import {
   encontrarPlaylistsDoJogo,
   filtrarCatalogo,
   mesclarExtrasCatalogo,
 } from './catalog';
+import {
+  encontrarSequenciaDoVideo,
+  extrairInfoEpisodio,
+  montarUrlMaratona,
+  parsearMaratonaDaUrl,
+} from './sequencias';
+import {
+  encontrarCarePackageParaJogoTwitch,
+  interpretarUptimeDecApi,
+} from './twitch';
 import type { Catalogo } from './types';
 import { embedDePlaylistId, parseYoutubeUrl } from './youtube';
 import {
@@ -522,5 +544,110 @@ describe('live RSS feed sync', () => {
     expect(mesclado.playlists).toHaveLength(2);
     expect(mesclado.playlists.find((p) => p.id === 'PL_WITCHER')?.quantidadeVideos).toBe(9);
     expect(mesclado.playlists.some((p) => p.id === 'PL_GTA6_NEW')).toBe(true);
+  });
+});
+
+describe('biblioteca local e integração Twitch', () => {
+  it('gerencia Salvos, Assistidos e Continuar assistindo (limite 4 e deduplicação)', () => {
+    let estado = BIBLIOTECA_VAZIA;
+    estado = alternarSalvo(estado, 'v1', 'videos');
+    estado = alternarSalvo(estado, 'PL1', 'playlists');
+    expect(estado.salvosVideos).toEqual(['v1']);
+    expect(estado.salvosPlaylists).toEqual(['PL1']);
+
+    // Remover salvo
+    estado = alternarSalvo(estado, 'v1', 'videos');
+    expect(estado.salvosVideos).toEqual([]);
+
+    // Marcar e desmarcar assistido
+    estado = alternarAssistido(estado, 'v1');
+    expect(estado.assistidosVideos).toEqual(['v1']);
+    estado = alternarAssistido(estado, 'v1');
+    expect(estado.assistidosVideos).toEqual([]);
+
+    // Histórico recente mantém no máximo 4 itens únicos ordenados do mais recente
+    estado = registrarRecente(estado, 'a', 'videos', 1);
+    estado = registrarRecente(estado, 'b', 'videos', 2);
+    estado = registrarRecente(estado, 'c', 'playlists', 3);
+    estado = registrarRecente(estado, 'd', 'videos', 4);
+    estado = registrarRecente(estado, 'e', 'videos', 5);
+    estado = registrarRecente(estado, 'b', 'videos', 6);
+    expect(estado.recentes.map((r) => r.id)).toEqual(['b', 'e', 'd', 'c']);
+
+    const reidratado = parsearBibliotecaLocal(JSON.stringify(estado));
+    expect(reidratado.recentes).toHaveLength(4);
+    expect(parsearBibliotecaLocal('{json-quebrado')).toEqual(BIBLIOTECA_VAZIA);
+    expect(limparRecentesBiblioteca(estado).recentes).toEqual([]);
+  });
+
+  it('interpreta status da Twitch e cruza Jogo com Care Package correspondente', () => {
+    expect(interpretarUptimeDecApi('filiperaaamos is offline')).toEqual({
+      aoVivo: false,
+      tempoAoVivo: null,
+    });
+    expect(interpretarUptimeDecApi('2 hours, 15 minutes')).toEqual({
+      aoVivo: true,
+      tempoAoVivo: '2 hours, 15 minutes',
+    });
+
+    expect(
+      encontrarCarePackageParaJogoTwitch('The Witcher 3: Wild Hunt')?.slug,
+    ).toBe('the-witcher-3-wild-hunt');
+    expect(encontrarCarePackageParaJogoTwitch('Grand Theft Auto IV')?.slug).toBe(
+      'gta-iv',
+    );
+    expect(encontrarCarePackageParaJogoTwitch('Grand Theft Auto VI')).toBeNull();
+  });
+
+  it('agrupa Sequências dentro da mesma Fonte em ordem de episódios e serializa Maratonas na URL', () => {
+    expect(extrairInfoEpisodio('Vamo zerar New Vegas #7 2/2')).toMatchObject({
+      episodio: 7,
+      subparte: 2,
+    });
+
+    const real = JSON.parse(
+      readFileSync(path.join(process.cwd(), 'public', 'data', 'videos.json'), 'utf8'),
+    ) as Catalogo;
+
+    const rdr = real.videos.find((v) =>
+      /Red Dead Redemption 2 #5/i.test(v.titulo),
+    );
+    expect(rdr).toBeDefined();
+    if (rdr) {
+      const seq = encontrarSequenciaDoVideo(rdr, real.videos);
+      expect(seq.length).toBeGreaterThanOrEqual(10);
+      expect(extrairInfoEpisodio(seq[0].titulo).episodio).toBe(1);
+    }
+
+    // Não mistura canais diferentes (NFS Most Wanted oficial vs não oficial)
+    const nfsMw = real.videos.find(
+      (v) =>
+        /NFS Most Wanted \(#1\)/i.test(v.titulo) &&
+        v.fontes.includes('@filiperamoslives'),
+    );
+    if (nfsMw) {
+      const seqMw = encontrarSequenciaDoVideo(nfsMw, real.videos);
+      expect(seqMw).toHaveLength(3);
+      expect(seqMw.every((v) => v.fontes.includes('@filiperamoslives'))).toBe(true);
+    }
+
+    // Fila + Maratona local + URL compartilhável
+    let est = alternarNaFila(BIBLIOTECA_VAZIA, 'KGkJMJviRQs');
+    est = alternarNaFila(est, '62guKHVWWGg');
+    est = moverNaFila(est, '62guKHVWWGg', -1);
+    expect(est.filaAtual).toEqual(['62guKHVWWGg', 'KGkJMJviRQs']);
+
+    est = salvarMaratonaLocal(est, 'NFS Most Wanted', est.filaAtual, 1000);
+    expect(est.maratonas).toHaveLength(1);
+    const url = montarUrlMaratona(est.maratonas[0].videoIds, 'NFS Most Wanted');
+    const qs = new URLSearchParams(url.slice(2));
+    const parsed = parsearMaratonaDaUrl(qs.get('maratona'), qs.get('titulo'));
+    expect(parsed).toEqual({
+      videoIds: ['62guKHVWWGg', 'KGkJMJviRQs'],
+      titulo: 'NFS Most Wanted',
+    });
+
+    est = removerMaratonaLocal(est, est.maratonas[0].id);
+    expect(est.maratonas).toHaveLength(0);
   });
 });

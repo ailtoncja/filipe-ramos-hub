@@ -3,10 +3,13 @@ import { CARE_PACKAGES } from '@/data/care-packages';
 import { ehFonteOficial, FONTES } from '@/data/fontes';
 import { filtrarCatalogo } from '@/lib/catalog';
 import { carregarCatalogoServidor } from '@/lib/catalog.server';
+import { parsearMaratonaDaUrl } from '@/lib/sequencias';
+import { buscarStatusTransmissaoTwitch } from '@/lib/twitch.server';
 import type {
   FiltroCategoriaFonte,
   OrdemCatalogo,
   TipoCatalogo,
+  VideoCatalogo,
 } from '@/lib/types';
 
 interface HomePageProps {
@@ -18,9 +21,10 @@ function primeiroValor(val: string | string[] | undefined): string {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const [params, catalogo] = await Promise.all([
+  const [params, catalogo, twitchStatus] = await Promise.all([
     searchParams,
     carregarCatalogoServidor(),
+    buscarStatusTransmissaoTwitch(),
   ]);
 
   const tipoRaw = primeiroValor(params.tipo);
@@ -40,6 +44,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       ? ordemRaw
       : 'recentes';
   const playId = primeiroValor(params.play);
+  const maratonaParam = parsearMaratonaDaUrl(
+    primeiroValor(params.maratona),
+    primeiroValor(params.titulo),
+  );
 
   const filtrados = filtrarCatalogo(catalogo, {
     tipo,
@@ -50,9 +58,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   });
   const initialItems = filtrados.slice(0, 25);
   const listaBase = tipo === 'playlists' ? catalogo.playlists : catalogo.videos;
-  const initialPlayItem = playId
-    ? (listaBase.find((item) => item.id === playId) ?? null)
-    : null;
+
+  let initialMaratonaVideos: VideoCatalogo[] = [];
+  let initialMaratonaTitulo: string | null = null;
+  if (maratonaParam) {
+    const porId = new Map(catalogo.videos.map((v) => [v.id, v]));
+    initialMaratonaVideos = maratonaParam.videoIds
+      .map((id) => porId.get(id))
+      .filter((v): v is VideoCatalogo => Boolean(v));
+    if (initialMaratonaVideos.length > 0) {
+      initialMaratonaTitulo = maratonaParam.titulo;
+    }
+  }
+
+  const initialPlayItem =
+    initialMaratonaVideos.length > 0
+      ? initialMaratonaVideos[0]
+      : playId
+        ? (listaBase.find((item) => item.id === playId) ?? null)
+        : null;
 
   const spotlightVideo =
     catalogo.videos.find((v) => ehFonteOficial(v.fontes)) ??
@@ -75,6 +99,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       initialCategoriaFonte={categoriaFonte}
       initialOrdem={ordem}
       initialPlayItem={initialPlayItem}
+      initialMaratonaVideos={initialMaratonaVideos}
+      initialMaratonaTitulo={initialMaratonaTitulo}
+      initialTwitchStatus={twitchStatus}
     />
   );
 }

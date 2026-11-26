@@ -37,6 +37,30 @@ export type TipoCatalogo = 'videos' | 'playlists';
 export type OrdemCatalogo = 'recentes' | 'antigos' | 'vistos';
 export type FiltroCategoriaFonte = 'todos' | 'oficiais' | 'nao-oficiais';
 
+export interface StatusTransmissaoTwitch {
+  aoVivo: boolean;
+  tempoAoVivo: string | null;
+  jogo: string | null;
+  titulo: string | null;
+  canalUrl: string;
+  carePackageSlug: string | null;
+  carePackageNome: string | null;
+  atualizadoEm: string;
+}
+
+export interface ItemRecenteLocal {
+  id: string;
+  tipo: TipoCatalogo;
+  abertoEm: number;
+}
+
+export interface MaratonaLocal {
+  id: string;
+  titulo: string;
+  videoIds: string[];
+  criadaEm: number;
+}
+
 export interface RecursoCarePackage {
   label: string;
   url: string;

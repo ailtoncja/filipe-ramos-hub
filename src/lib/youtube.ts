@@ -118,6 +118,17 @@ export function embedDePlaylistId(id: string): string {
   return `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(id)}&autoplay=1`;
 }
 
+/** Gera embed do YouTube tocando uma fila ordenada de vídeos a partir do episódio selecionado. */
+export function embedDeFilaVideos(
+  videoIds: readonly string[],
+  atualId: string,
+): string {
+  const idx = videoIds.indexOf(atualId);
+  const fila = idx >= 0 ? videoIds.slice(idx) : [atualId, ...videoIds];
+  if (fila.length <= 1) return embedDeVideoId(atualId);
+  return buildQueueEmbedUrl(fila, { initialVideoId: atualId, autoplay: true });
+}
+
 export function urlYoutubeDoItem(id: string, tipo: 'videos' | 'playlists'): string {
   return tipo === 'playlists'
     ? `https://www.youtube.com/playlist?list=${encodeURIComponent(id)}`
