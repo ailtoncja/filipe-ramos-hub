@@ -21,6 +21,7 @@ import {
 } from './catalog';
 import {
   encontrarSequenciaDoVideo,
+  encontrarVideosRelacionadosAoJogo,
   extrairInfoEpisodio,
   montarUrlMaratona,
   parsearMaratonaDaUrl,
@@ -674,5 +675,30 @@ describe('biblioteca local e integração Twitch', () => {
         href: 'https://drive.google.com/file/d/abc',
       },
     ]);
+  });
+
+  it('recomenda vídeos relacionados ao mesmo jogo sem repetir itens da sequência atual', () => {
+    const real = JSON.parse(
+      readFileSync(path.join(process.cwd(), 'public', 'data', 'videos.json'), 'utf8'),
+    ) as Catalogo;
+
+    const nfsUnbound = real.videos.find((v) =>
+      /Continuando NFS Unbound #2/i.test(v.titulo),
+    );
+    expect(nfsUnbound).toBeDefined();
+    if (nfsUnbound) {
+      const seq = encontrarSequenciaDoVideo(nfsUnbound, real.videos);
+      const seqIds = new Set(seq.map((v) => v.id));
+      const rel = encontrarVideosRelacionadosAoJogo(
+        nfsUnbound,
+        real.videos,
+        seqIds,
+        6,
+      );
+      expect(rel.nomeJogo).toBe('Need for Speed: Unbound');
+      expect(rel.videos.length).toBeGreaterThanOrEqual(4);
+      expect(rel.videos.every((v) => /unbound/i.test(v.titulo))).toBe(true);
+      expect(rel.videos.some((v) => seqIds.has(v.id))).toBe(false);
+    }
   });
 });

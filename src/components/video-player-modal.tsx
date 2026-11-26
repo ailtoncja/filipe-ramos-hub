@@ -40,10 +40,17 @@ interface VideoPlayerModalProps {
   sequencia?: VideoCatalogo[];
   tituloSequencia?: string;
   ehMaratona?: boolean;
+  relacionados?: VideoCatalogo[];
+  nomeJogoRelacionados?: string | null;
+  buscaJogoRelacionados?: string | null;
+  filaAtualSet?: ReadonlySet<string>;
   onToggleSalvo?: () => void;
   onToggleAssistido?: () => void;
   onToggleFila?: () => void;
+  onToggleItemFila?: (videoId: string) => void;
   onSelecionarEpisodio?: (video: VideoCatalogo) => void;
+  onAbrirRelacionado?: (video: VideoCatalogo) => void;
+  onBuscarJogoRelacionado?: (busca: string) => void;
   onEditarComoMaratona?: (videos: VideoCatalogo[], titulo: string) => void;
   onSalvarMaratona?: (videos: VideoCatalogo[], titulo: string) => void;
   onClose: () => void;
@@ -59,10 +66,17 @@ export function VideoPlayerModal({
   sequencia = [],
   tituloSequencia,
   ehMaratona = false,
+  relacionados = [],
+  nomeJogoRelacionados = null,
+  buscaJogoRelacionados = null,
+  filaAtualSet,
   onToggleSalvo,
   onToggleAssistido,
   onToggleFila,
+  onToggleItemFila,
   onSelecionarEpisodio,
+  onAbrirRelacionado,
+  onBuscarJogoRelacionado,
   onEditarComoMaratona,
   onSalvarMaratona,
   onClose,
@@ -485,6 +499,107 @@ export function VideoPlayerModal({
                   );
                 })}
               </ol>
+            </section>
+          ) : null}
+
+          {/* Vídeos relacionados ao mesmo Jogo */}
+          {tipo === 'videos' && relacionados.length > 0 && onAbrirRelacionado ? (
+            <section
+              aria-label="Vídeos relacionados ao mesmo jogo"
+              className="border-t border-[var(--border)] px-5 py-4 sm:px-6"
+            >
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-[var(--ink)]">
+                  {nomeJogoRelacionados
+                    ? `Mais vídeos de ${nomeJogoRelacionados}`
+                    : 'Relacionados ao mesmo jogo'}
+                </h3>
+                {buscaJogoRelacionados && onBuscarJogoRelacionado ? (
+                  <button
+                    type="button"
+                    onClick={() => onBuscarJogoRelacionado(buscaJogoRelacionados)}
+                    className="inline-flex min-h-9 cursor-pointer items-center gap-1 text-xs font-semibold text-[var(--accent-text)] hover:underline"
+                  >
+                    Ver todos no Catálogo
+                    <ArrowRightIcon className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {relacionados.map((rel) => {
+                  const relOficial = ehFonteOficial(rel.fontes);
+                  const relAssistido = Boolean(assistidosSet?.has(rel.id));
+                  const relNaFila = Boolean(filaAtualSet?.has(rel.id));
+                  return (
+                    <div
+                      key={rel.id}
+                      className="group flex min-w-0 items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 transition-colors hover:border-[var(--border-strong)]"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => onAbrirRelacionado(rel)}
+                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
+                      >
+                        <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-[var(--player-bg)]">
+                          {rel.miniatura ? (
+                            <img
+                              src={rel.miniatura}
+                              alt=""
+                              loading="lazy"
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          ) : null}
+                          {relAssistido ? (
+                            <span className="absolute left-1 top-1 rounded-full bg-[var(--overlay-surface)] p-0.5 text-[var(--accent-text)]">
+                              <CheckCircleIcon className="h-3 w-3" />
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-xs font-semibold leading-snug text-[var(--ink)] group-hover:text-[var(--accent-text)]">
+                            {rel.titulo}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--ink-muted)]">
+                            <span className="truncate">
+                              {nomeExibicaoDaFonte(rel.canal)}
+                            </span>
+                            {relOficial ? (
+                              <span className="rounded-full bg-[var(--accent-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--accent-text)]">
+                                Oficial
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </button>
+                      {onToggleItemFila ? (
+                        <button
+                          type="button"
+                          onClick={() => onToggleItemFila(rel.id)}
+                          aria-pressed={relNaFila}
+                          aria-label={
+                            relNaFila
+                              ? `Remover "${rel.titulo}" da fila`
+                              : `Adicionar "${rel.titulo}" à fila`
+                          }
+                          title={relNaFila ? 'Na fila' : 'Adicionar à fila'}
+                          className={`inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-elevated)] ${
+                            relNaFila
+                              ? 'text-[var(--accent-text)]'
+                              : 'text-[var(--ink-muted)] hover:text-[var(--accent-text)]'
+                          }`}
+                        >
+                          {relNaFila ? (
+                            <CheckIcon className="h-3.5 w-3.5" />
+                          ) : (
+                            <PlusIcon className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
             </section>
           ) : null}
         </div>

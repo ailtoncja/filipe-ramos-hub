@@ -24,6 +24,7 @@ import { filtrarCatalogo, mesclarExtrasCatalogo } from '@/lib/catalog';
 import { normalizarParaBusca } from '@/lib/search';
 import {
   encontrarSequenciaDoVideo,
+  encontrarVideosRelacionadosAoJogo,
   montarUrlMaratona,
   ordenarVideosParaMaratona,
 } from '@/lib/sequencias';
@@ -455,6 +456,21 @@ export function CatalogExplorer({
       : [...videosPorId.values()];
     return encontrarSequenciaDoVideo(itemEmReproducao, pool);
   }, [itemEmReproducao, tipo, maratonaAtiva, catalogoCompleto, videosPorId]);
+
+  const relacionadosNoPlayer = useMemo(() => {
+    if (!itemEmReproducao || tipo !== 'videos') {
+      return { nomeJogo: null, buscaJogo: null, videos: [] };
+    }
+    const pool = catalogoCompleto
+      ? catalogoCompleto.videos
+      : [...videosPorId.values()];
+    return encontrarVideosRelacionadosAoJogo(
+      itemEmReproducao,
+      pool,
+      sequenciaNoPlayer.map((v) => v.id),
+      6,
+    );
+  }, [itemEmReproducao, tipo, catalogoCompleto, videosPorId, sequenciaNoPlayer]);
 
   const abrirNoPlayer = useCallback(
     (item: VideoCatalogo | PlaylistCatalogo, tipoItem: TipoCatalogo) => {
@@ -1402,12 +1418,25 @@ export function CatalogExplorer({
           sequencia={sequenciaNoPlayer}
           tituloSequencia={maratonaAtiva?.titulo}
           ehMaratona={Boolean(maratonaAtiva)}
+          relacionados={relacionadosNoPlayer.videos}
+          nomeJogoRelacionados={relacionadosNoPlayer.nomeJogo}
+          buscaJogoRelacionados={relacionadosNoPlayer.buscaJogo}
+          filaAtualSet={filaAtualSet}
           onToggleSalvo={() => toggleSalvo(itemEmReproducao.id, tipo)}
           onToggleAssistido={() => toggleAssistido(itemEmReproducao.id)}
           onToggleFila={() => toggleNaFila(itemEmReproducao.id)}
+          onToggleItemFila={toggleNaFila}
           onSelecionarEpisodio={(video) => {
             setItemEmReproducao(video);
             registrarAbertura(video.id, 'videos');
+          }}
+          onAbrirRelacionado={(video) => abrirNoPlayer(video, 'videos')}
+          onBuscarJogoRelacionado={(termo) => {
+            setItemEmReproducao(null);
+            setMaratonaAtiva(null);
+            setTipo('videos');
+            setBusca(termo);
+            setLimite(PAGE_SIZE);
           }}
           onEditarComoMaratona={abrirEditorComSequencia}
           onSalvarMaratona={(videos, titulo) =>
