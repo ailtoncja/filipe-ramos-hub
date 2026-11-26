@@ -2,9 +2,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 const key = process.env.YOUTUBE_API_KEY;
 if (!key) throw new Error('Defina a variável YOUTUBE_API_KEY antes de atualizar o catálogo.');
-const source = await readFile(new URL('../src/app/data/canais.data.ts', import.meta.url), 'utf8');
-const blocks = [...source.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'\s*\}/g)];
-if (!blocks.length) throw new Error('Nenhuma fonte encontrada em canais.data.ts.');
+const source = await readFile(new URL('../src/data/fontes.ts', import.meta.url), 'utf8');
+const blocks = [...source.matchAll(/\{\s*nome:\s*'([^']+)'[\s\S]*?youtubeUrl:\s*'([^']+)'/g)];
+if (!blocks.length) throw new Error('Nenhuma fonte encontrada em src/data/fontes.ts.');
 const api = async (endpoint, params) => {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${endpoint}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));

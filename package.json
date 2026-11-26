@@ -1,39 +1,28 @@
 {
-  "name": "site",
-  "version": "0.0.0",
+  "name": "filipe-ramos-hub",
+  "version": "2.0.0",
+  "private": true,
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "dev": "next dev",
+    "start": "next start",
+    "build": "next build",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "atualizar-videos": "node scripts/atualizar-videos.mjs"
   },
-  "private": true,
-  "packageManager": "npm@11.16.0",
   "dependencies": {
-    "@angular/common": "^22.2.3",
-    "@angular/compiler": "^22.2.3",
-    "@angular/core": "^22.2.3",
-    "@angular/forms": "^22.2.3",
-    "@angular/platform-browser": "^22.2.3",
-    "@angular/router": "^22.2.3",
-    "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "@angular/build": "^22.2.4",
-    "@angular/cli": "^22.2.4",
-    "@angular/compiler-cli": "^22.2.3",
-    "@tailwindcss/postcss": "^4.3.3",
-    "jsdom": "^28.0.0",
-    "postcss": "^8.5.25",
-    "prettier": "^3.8.1",
-    "tailwindcss": "^4.3.3",
-    "typescript": "~6.0.2",
-    "vitest": "^4.0.8"
-  },
-  "overrides": {
-    "vite": "8.3.5"
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }
