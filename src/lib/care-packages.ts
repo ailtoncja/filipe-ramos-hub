@@ -1,5 +1,9 @@
 import { CARE_PACKAGES, CARE_PACKAGES_POR_SLUG } from '@/data/care-packages';
-import { normalizarTexto } from './text';
+import {
+  indexarCampoBusca,
+  pontuarCampoBusca,
+  prepararConsultaBusca,
+} from './search';
 import type { CarePackage, TipoRecursoChave } from './types';
 
 export interface FiltroCarePackage {
@@ -51,15 +55,25 @@ const TIPOS_CACHE = new Map<string, Set<TipoRecursoChave>>(
   CARE_PACKAGES.map((cp) => [cp.slug, tiposDoCarePackage(cp)]),
 );
 
+const INDICE_CP_CACHE = new Map(
+  CARE_PACKAGES.map((cp) => [
+    cp.slug,
+    indexarCampoBusca(`${cp.jogo} ${cp.descricao}`),
+  ]),
+);
+
 export function filtrarCarePackages(
   busca: string,
   filtrosAtivos: ReadonlySet<TipoRecursoChave>,
 ): CarePackage[] {
-  const termos = normalizarTexto(busca.trim()).split(/\s+/).filter(Boolean);
+  const consulta = prepararConsultaBusca(busca);
+  const temBusca = consulta.termos.length > 0;
   return CARE_PACKAGES.filter((cp) => {
-    if (termos.length > 0) {
-      const alvo = normalizarTexto(`${cp.jogo} ${cp.descricao}`);
-      if (!termos.every((t) => alvo.includes(t))) return false;
+    if (temBusca) {
+      const campo =
+        INDICE_CP_CACHE.get(cp.slug) ??
+        indexarCampoBusca(`${cp.jogo} ${cp.descricao}`);
+      if (pontuarCampoBusca(consulta, campo) === 0) return false;
     }
     if (filtrosAtivos.size === 0) return true;
     const tipos = TIPOS_CACHE.get(cp.slug) ?? tiposDoCarePackage(cp);

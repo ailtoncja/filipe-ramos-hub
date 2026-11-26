@@ -1,3 +1,11 @@
+import { EXTRAS_CATALOGO } from '@/data/extras-catalogo';
+import { ehFonteOficial } from '@/data/fontes';
+import {
+  type CampoIndexado,
+  indexarCampoBusca,
+  pontuarCampoBusca,
+  prepararConsultaBusca,
+} from './search';
 import { normalizarTexto } from './text';
 import type {
   Catalogo,
@@ -6,12 +14,37 @@ import type {
   TipoCatalogo,
   VideoCatalogo,
 } from './types';
-import { EXTRAS_CATALOGO } from '@/data/extras-catalogo';
+
+interface IndiceItemCatalogo {
+  principal: CampoIndexado;
+  completo: CampoIndexado;
+}
+
+const CACHE_INDICE_CATALOGO = new WeakMap<
+  VideoCatalogo | PlaylistCatalogo,
+  IndiceItemCatalogo
+>();
+
+function obterIndiceItem(
+  item: VideoCatalogo | PlaylistCatalogo,
+): IndiceItemCatalogo {
+  let indice = CACHE_INDICE_CATALOGO.get(item);
+  if (!indice) {
+    const tituloECanal = `${item.titulo} ${item.canal}`;
+    indice = {
+      principal: indexarCampoBusca(tituloECanal),
+      completo: indexarCampoBusca(`${tituloECanal} ${item.descricao}`),
+    };
+    CACHE_INDICE_CATALOGO.set(item, indice);
+  }
+  return indice;
+}
 
 export interface FiltroCatalogoParams {
   tipo: TipoCatalogo;
   busca: string;
   fonte: string;
+  somenteOficiais?: boolean;
   ordem: OrdemCatalogo;
 }
 
@@ -32,34 +65,63 @@ export function filtrarCatalogo(
   catalogo: Catalogo,
   params: FiltroCatalogoParams,
 ): (VideoCatalogo | PlaylistCatalogo)[] {
-  const termos = normalizarTexto(params.busca.trim()).split(/\s+/).filter(Boolean);
+  const consulta = prepararConsultaBusca(params.busca);
+  const temBusca = consulta.termos.length > 0;
   const fonte = params.fonte.trim();
   const itens: (VideoCatalogo | PlaylistCatalogo)[] =
     params.tipo === 'playlists' ? catalogo.playlists : catalogo.videos;
 
-  const filtrados = itens.filter((item) => {
+  const pontuados: {
+    item: VideoCatalogo | PlaylistCatalogo;
+    noTitulo: number;
+  }[] = [];
+
+  for (const item of itens) {
+    if (params.somenteOficiais && !ehFonteOficial(item.fontes)) {
+      continue;
+    }
     if (fonte && !item.fontes.includes(fonte)) {
-      return false;
+      continue;
     }
-    if (termos.length === 0) {
-      return true;
+    if (!temBusca) {
+      pontuados.push({ item, noTitulo: 0 });
+      continue;
     }
-    const texto = normalizarTexto(`${item.titulo} ${item.descricao} ${item.canal}`);
-    return termos.every((termo) => texto.includes(termo));
-  });
+
+    const indice = obterIndiceItem(item);
+    const pontosTitulo = pontuarCampoBusca(consulta, indice.principal);
+    if (pontosTitulo > 0) {
+      pontuados.push({ item, noTitulo: 1 });
+      continue;
+    }
+
+    const pontosCompleto = pontuarCampoBusca(consulta, indice.completo);
+    if (pontosCompleto > 0) {
+      pontuados.push({ item, noTitulo: 0 });
+    }
+  }
 
   const ordemEfetiva: OrdemCatalogo =
     params.tipo === 'playlists' && params.ordem === 'vistos' ? 'recentes' : params.ordem;
 
-  return filtrados.toSorted((a, b) => {
+  pontuados.sort((a, b) => {
+    // Quando há busca ativa, vídeos cujo título/canal corresponde vêm antes dos que só mencionam na descrição.
+    if (temBusca && b.noTitulo !== a.noTitulo) {
+      return b.noTitulo - a.noTitulo;
+    }
     if (ordemEfetiva === 'vistos') {
-      return (b.visualizacoes ?? -1) - (a.visualizacoes ?? -1) || b.publicadoEm.localeCompare(a.publicadoEm);
+      return (
+        (b.item.visualizacoes ?? -1) - (a.item.visualizacoes ?? -1) ||
+        b.item.publicadoEm.localeCompare(a.item.publicadoEm)
+      );
     }
     if (ordemEfetiva === 'antigos') {
-      return a.publicadoEm.localeCompare(b.publicadoEm);
+      return a.item.publicadoEm.localeCompare(b.item.publicadoEm);
     }
-    return b.publicadoEm.localeCompare(a.publicadoEm);
+    return b.item.publicadoEm.localeCompare(a.item.publicadoEm);
   });
+
+  return pontuados.map((entrada) => entrada.item);
 }
 
 const ALIASES_JOGO: Record<string, string[]> = {

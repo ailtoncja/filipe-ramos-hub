@@ -148,6 +148,14 @@ export const FONTES_ORDENADAS: Fonte[] = FONTES.toSorted((a, b) =>
   a.nomeExibicao.localeCompare(b.nomeExibicao, 'pt-BR'),
 );
 
+export const FONTES_OFICIAIS: Fonte[] = FONTES.filter(
+  (f) => f.categoria === 'oficial',
+);
+
+export const FONTES_COMUNIDADE: Fonte[] = FONTES_ORDENADAS.filter(
+  (f) => f.categoria !== 'oficial',
+);
+
 export const MAPA_FONTES: ReadonlyMap<string, Fonte> = new Map(
   FONTES.map((fonte) => [fonte.nome, fonte]),
 );

@@ -79,6 +79,222 @@ describe('catalog helpers', () => {
     expect(maisVistos.map((v) => v.id)).toEqual(['v1', 'v2']);
   });
 
+  it('filtra apenas os canais oficiais do Filipe em vídeos e playlists', () => {
+    const catalogoComComunidade: Catalogo = {
+      ...CATALOGO_EXEMPLO,
+      videos: [
+        ...CATALOGO_EXEMPLO.videos,
+        {
+          id: 'v3',
+          titulo: 'Live oficial no Baú',
+          descricao: '',
+          canal: 'Filipe Ramos - Baú de Lives',
+          fontes: ['@filiperamoslives'],
+          publicadoEm: '2026-11-01T12:00:00Z',
+          miniatura: 'https://i.ytimg.com/vi/v3/mqdefault.jpg',
+          visualizacoes: 9000,
+        },
+      ],
+      playlists: [
+        ...CATALOGO_EXEMPLO.playlists,
+        {
+          id: 'PL_COMUNIDADE',
+          titulo: 'GTA 6 Comunidade',
+          descricao: '',
+          canal: 'rapouzer',
+          fontes: ['@rapouzer'],
+          publicadoEm: '2026-11-20T00:00:00Z',
+          miniatura: 'https://i.ytimg.com/vi/v3/mqdefault.jpg',
+          quantidadeVideos: 7,
+        },
+      ],
+    };
+
+    const videosOficiais = filtrarCatalogo(catalogoComComunidade, {
+      tipo: 'videos',
+      busca: '',
+      fonte: '',
+      somenteOficiais: true,
+      ordem: 'recentes',
+    });
+    expect(videosOficiais.map((v) => v.id)).toEqual(['v3', 'v1']);
+
+    const playlistsOficiais = filtrarCatalogo(catalogoComComunidade, {
+      tipo: 'playlists',
+      busca: '',
+      fonte: '',
+      somenteOficiais: true,
+      ordem: 'recentes',
+    });
+    expect(playlistsOficiais.map((p) => p.id)).toEqual(['PL_WITCHER']);
+  });
+
+  it('encontra séries abreviadas (NFS Unbound ao buscar need for speed, GTA 4, RE9, FFXII, S.T.A.L.K.E.R.) e prioriza título sobre descrição', () => {
+    const catalogoAliases: Catalogo = {
+      atualizadoEm: '2026-11-26T00:00:00Z',
+      videos: [
+        {
+          id: 'nfs-unbound',
+          titulo: 'Continuando NFS Unbound #2',
+          descricao: 'Broadcasted live on Twitch',
+          canal: 'Filipe Ramos - Baú de Lives',
+          fontes: ['@filiperamoslives'],
+          publicadoEm: '2023-01-07T00:11:02Z',
+          miniatura: '',
+        },
+        {
+          id: 'desc-only',
+          titulo: 'The Crew: Carro Secreto',
+          descricao: 'Curti muito jogar Need for Speed semana passada',
+          canal: 'Filipe Ramos',
+          fontes: ['@FilipeRamos96'],
+          publicadoEm: '2026-11-01T00:00:00Z',
+          miniatura: '',
+        },
+        {
+          id: 'gtaiv',
+          titulo: 'Filipe Ramos live de GtaIV pt5',
+          descricao: '',
+          canal: 'aeithales',
+          fontes: ['@aeithales'],
+          publicadoEm: '2024-01-01T00:00:00Z',
+          miniatura: '',
+        },
+        {
+          id: 'stalker',
+          titulo: 'S.T.A.L.K.E.R. - Call of Pripyat #3',
+          descricao: '',
+          canal: 'Filipe Ramos - Baú de Lives',
+          fontes: ['@filiperamoslives'],
+          publicadoEm: '2025-01-01T00:00:00Z',
+          miniatura: '',
+        },
+        {
+          id: 're9',
+          titulo: 'RE9: Brincando um tico no modo de jogo novo.',
+          descricao: '',
+          canal: 'Filipe Ramos - Baú de Lives',
+          fontes: ['@filiperamoslives'],
+          publicadoEm: '2026-06-01T00:00:00Z',
+          miniatura: '',
+        },
+        {
+          id: 'ffxii',
+          titulo: 'FFXII: Jogando com o meu mod #8',
+          descricao: '',
+          canal: 'Filipe Ramos - Baú de Lives',
+          fontes: ['@filiperamoslives'],
+          publicadoEm: '2025-06-01T00:00:00Z',
+          miniatura: '',
+        },
+        {
+          id: 'dd2',
+          titulo: 'DD2: Dark Arisen (Hard)',
+          descricao: '',
+          canal: 'Filipe Ramos - Baú de Lives',
+          fontes: ['@filiperamoslives'],
+          publicadoEm: '2025-07-01T00:00:00Z',
+          miniatura: '',
+        },
+      ],
+      playlists: [],
+    };
+
+    const porNeedForSpeed = filtrarCatalogo(catalogoAliases, {
+      tipo: 'videos',
+      busca: 'need for speed',
+      fonte: '',
+      ordem: 'recentes',
+    });
+    // Mesmo sendo mais antigo, NFS Unbound (título) deve vir antes do vídeo que só menciona na descrição
+    expect(porNeedForSpeed.map((v) => v.id)).toEqual(['nfs-unbound', 'desc-only']);
+
+    expect(
+      filtrarCatalogo(catalogoAliases, {
+        tipo: 'videos',
+        busca: 'need for speed unboud',
+        fonte: '',
+        ordem: 'recentes',
+      }).map((v) => v.id),
+    ).toEqual(['nfs-unbound']);
+
+    expect(
+      filtrarCatalogo(catalogoAliases, {
+        tipo: 'videos',
+        busca: 'gta 4',
+        fonte: '',
+        ordem: 'recentes',
+      }).map((v) => v.id),
+    ).toEqual(['gtaiv']);
+
+    expect(
+      filtrarCatalogo(catalogoAliases, {
+        tipo: 'videos',
+        busca: 'stalker',
+        fonte: '',
+        ordem: 'recentes',
+      }).map((v) => v.id),
+    ).toEqual(['stalker']);
+
+    expect(
+      filtrarCatalogo(catalogoAliases, {
+        tipo: 'videos',
+        busca: 'resident evil 9',
+        fonte: '',
+        ordem: 'recentes',
+      }).map((v) => v.id),
+    ).toEqual(['re9']);
+
+    expect(
+      filtrarCatalogo(catalogoAliases, {
+        tipo: 'videos',
+        busca: 'final fantasy 12',
+        fonte: '',
+        ordem: 'recentes',
+      }).map((v) => v.id),
+    ).toEqual(['ffxii']);
+
+    expect(
+      filtrarCatalogo(catalogoAliases, {
+        tipo: 'videos',
+        busca: "dragon's dogma 2",
+        fonte: '',
+        ordem: 'recentes',
+      }).map((v) => v.id),
+    ).toEqual(['dd2']);
+  });
+
+  it('no catálogo real (public/data/videos.json), buscar "need for speed" retorna toda a série NFS Unbound e "stalker" encontra S.T.A.L.K.E.R.', () => {
+    const real = JSON.parse(
+      readFileSync(path.join(process.cwd(), 'public', 'data', 'videos.json'), 'utf8'),
+    ) as Catalogo;
+
+    const nfs = filtrarCatalogo(real, {
+      tipo: 'videos',
+      busca: 'need for speed',
+      fonte: '',
+      ordem: 'recentes',
+    });
+    const nfsUnbound = nfs.filter((v) => /unbound/i.test(v.titulo));
+    expect(nfsUnbound.length).toBeGreaterThanOrEqual(10);
+
+    const gta4 = filtrarCatalogo(real, {
+      tipo: 'videos',
+      busca: 'gta 4',
+      fonte: '',
+      ordem: 'recentes',
+    });
+    expect(gta4.some((v) => /gtaiv/i.test(v.titulo))).toBe(true);
+
+    const stalker = filtrarCatalogo(real, {
+      tipo: 'videos',
+      busca: 'stalker',
+      fonte: '',
+      ordem: 'recentes',
+    });
+    expect(stalker.length).toBeGreaterThanOrEqual(15);
+  });
+
   it('encontra playlists relacionadas a um jogo sem duplicar URLs já curadas', () => {
     const semDuplicar = encontrarPlaylistsDoJogo(
       'The Witcher 3: Wild Hunt',
@@ -95,7 +311,7 @@ describe('catalog helpers', () => {
     expect(deduplicado).toEqual([]);
   });
 
-  it('extrai todas as 13 fontes com o mesmo regex do script atualizar-videos.mjs', () => {
+  it('extrai todas as fontes com o mesmo regex do script atualizar-videos.mjs', () => {
     const fonteFile = readFileSync(
       path.join(process.cwd(), 'src', 'data', 'fontes.ts'),
       'utf8',

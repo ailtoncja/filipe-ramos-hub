@@ -12,7 +12,9 @@ import {
 } from 'react';
 import {
   ehFonteOficial,
-  FONTES_ORDENADAS,
+  FONTES_COMUNIDADE,
+  FONTES_OFICIAIS,
+  FONTES_OFICIAIS_SET,
   nomeExibicaoDaFonte,
 } from '@/data/fontes';
 import { filtrarCatalogo, mesclarExtrasCatalogo } from '@/lib/catalog';
@@ -27,6 +29,7 @@ import type {
 import { urlYoutubeDoItem } from '@/lib/youtube';
 import {
   ArrowRightIcon,
+  CheckIcon,
   CloseIcon,
   ExternalLinkIcon,
   ListVideoIcon,
@@ -95,6 +98,7 @@ interface CatalogExplorerProps {
   initialTipo: TipoCatalogo;
   initialBusca: string;
   initialFonte: string;
+  initialSomenteOficiais: boolean;
   initialOrdem: OrdemCatalogo;
   initialPlayItem: VideoCatalogo | PlaylistCatalogo | null;
 }
@@ -111,6 +115,7 @@ export function CatalogExplorer({
   initialTipo,
   initialBusca,
   initialFonte,
+  initialSomenteOficiais,
   initialOrdem,
   initialPlayItem,
 }: CatalogExplorerProps) {
@@ -122,6 +127,7 @@ export function CatalogExplorer({
   const [tipo, setTipo] = useState<TipoCatalogo>(initialTipo);
   const [busca, setBusca] = useState(initialBusca);
   const [fonte, setFonte] = useState(initialFonte);
+  const [somenteOficiais, setSomenteOficiais] = useState(initialSomenteOficiais);
   const [ordem, setOrdem] = useState<OrdemCatalogo>(initialOrdem);
   const [limite, setLimite] = useState(PAGE_SIZE);
   const [itemEmReproducao, setItemEmReproducao] = useState<
@@ -206,12 +212,13 @@ export function CatalogExplorer({
     if (busca.trim()) params.set('q', busca.trim());
     if (tipo === 'playlists') params.set('tipo', 'playlists');
     if (fonte) params.set('fonte', fonte);
+    if (somenteOficiais) params.set('oficiais', '1');
     if (ordem !== 'recentes') params.set('ordem', ordem);
     if (itemEmReproducao) params.set('play', itemEmReproducao.id);
 
     const qs = params.toString();
     window.history.replaceState(null, '', qs ? `/?${qs}` : '/');
-  }, [busca, tipo, fonte, ordem, itemEmReproducao]);
+  }, [busca, tipo, fonte, somenteOficiais, ordem, itemEmReproducao]);
 
   const resultadosFiltrados = useMemo(() => {
     if (!catalogoCompleto) return null;
@@ -219,9 +226,10 @@ export function CatalogExplorer({
       tipo,
       busca: buscaDiferida,
       fonte,
+      somenteOficiais,
       ordem,
     });
-  }, [catalogoCompleto, tipo, buscaDiferida, fonte, ordem]);
+  }, [catalogoCompleto, tipo, buscaDiferida, fonte, somenteOficiais, ordem]);
 
   const totalVideosAtual = catalogoCompleto?.videos.length ?? totalVideos;
   const totalPlaylistsAtual = catalogoCompleto?.playlists.length ?? totalPlaylists;
@@ -234,7 +242,9 @@ export function CatalogExplorer({
     );
   }, [catalogoCompleto, spotlightVideo]);
 
-  const temFiltrosAtivos = Boolean(busca.trim() || fonte || ordem !== 'recentes');
+  const temFiltrosAtivos = Boolean(
+    busca.trim() || fonte || somenteOficiais || ordem !== 'recentes',
+  );
   const mostrarDestaque = Boolean(
     spotlightAtual && tipo === 'videos' && !temFiltrosAtivos,
   );
@@ -260,10 +270,22 @@ export function CatalogExplorer({
     });
   }, []);
 
+  const alternarSomenteOficiais = useCallback(() => {
+    const proximo = !somenteOficiais;
+    startTransition(() => {
+      setSomenteOficiais(proximo);
+      if (proximo && fonte && !FONTES_OFICIAIS_SET.has(fonte)) {
+        setFonte('');
+      }
+      setLimite(PAGE_SIZE);
+    });
+  }, [somenteOficiais, fonte]);
+
   const limparFiltros = useCallback(() => {
     startTransition(() => {
       setBusca('');
       setFonte('');
+      setSomenteOficiais(false);
       setOrdem('recentes');
       setLimite(PAGE_SIZE);
     });
@@ -444,25 +466,48 @@ export function CatalogExplorer({
               <select
                 value={fonte}
                 onChange={(e) => {
+                  const novaFonte = e.target.value;
                   startTransition(() => {
-                    setFonte(e.target.value);
+                    setFonte(novaFonte);
+                    if (novaFonte && !FONTES_OFICIAIS_SET.has(novaFonte)) {
+                      setSomenteOficiais(false);
+                    }
                     setLimite(PAGE_SIZE);
                   });
                 }}
                 className="min-w-0 flex-1 cursor-pointer bg-transparent text-sm font-medium text-[var(--ink)] focus:outline-none lg:max-w-[180px]"
               >
                 <option value="" className="bg-[var(--surface)] text-[var(--ink)]">
-                  Todas as fontes
+                  {somenteOficiais ? 'Todos os oficiais' : 'Todas as fontes'}
                 </option>
-                {FONTES_ORDENADAS.map((item) => (
-                  <option
-                    key={item.nome}
-                    value={item.nome}
-                    className="bg-[var(--surface)] text-[var(--ink)]"
-                  >
-                    {item.nomeExibicao}
-                  </option>
-                ))}
+                <optgroup
+                  label="Canais oficiais"
+                  className="bg-[var(--surface)] text-[var(--ink-muted)]"
+                >
+                  {FONTES_OFICIAIS.map((item) => (
+                    <option
+                      key={item.nome}
+                      value={item.nome}
+                      className="bg-[var(--surface)] text-[var(--ink)]"
+                    >
+                      {item.nomeExibicao}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup
+                  label="Comunidade"
+                  className="bg-[var(--surface)] text-[var(--ink-muted)]"
+                >
+                  {FONTES_COMUNIDADE.map((item) => (
+                    <option
+                      key={item.nome}
+                      value={item.nome}
+                      className="bg-[var(--surface)] text-[var(--ink)]"
+                    >
+                      {item.nomeExibicao}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
 
@@ -497,12 +542,36 @@ export function CatalogExplorer({
           </div>
         </div>
 
-        {/* Resumo dos resultados */}
+        {/* Resumo dos resultados e filtro rápido de canais oficiais */}
         <div
           aria-live="polite"
           className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--ink-muted)] tabular-nums"
         >
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button
+              type="button"
+              onClick={alternarSomenteOficiais}
+              aria-pressed={somenteOficiais}
+              title="Mostrar apenas Filipe Ramos e Filipe Ramos - Baú de Lives"
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 text-xs font-semibold transition-colors ${
+                somenteOficiais
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`inline-flex h-4 w-4 items-center justify-center rounded border transition-colors ${
+                  somenteOficiais
+                    ? 'border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)]'
+                    : 'border-[var(--border-strong)] bg-[var(--bg)]'
+                }`}
+              >
+                {somenteOficiais ? <CheckIcon className="h-3 w-3" /> : null}
+              </span>
+              Apenas canais oficiais
+            </button>
+
             {erroCarga ? (
               <span className="text-[var(--warn-ink)]">
                 Não foi possível carregar o índice completo. Exibindo resultados iniciais.

@@ -23,6 +23,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const tipo: TipoCatalogo = tipoRaw === 'playlists' ? 'playlists' : 'videos';
   const busca = primeiroValor(params.q);
   const fonte = primeiroValor(params.fonte);
+  const somenteOficiais = primeiroValor(params.oficiais) === '1';
   const ordemRaw = primeiroValor(params.ordem);
   const ordem: OrdemCatalogo =
     ordemRaw === 'antigos' || (ordemRaw === 'vistos' && tipo === 'videos')
@@ -30,7 +31,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       : 'recentes';
   const playId = primeiroValor(params.play);
 
-  const filtrados = filtrarCatalogo(catalogo, { tipo, busca, fonte, ordem });
+  const filtrados = filtrarCatalogo(catalogo, {
+    tipo,
+    busca,
+    fonte,
+    somenteOficiais,
+    ordem,
+  });
   const initialItems = filtrados.slice(0, 25);
   const listaBase = tipo === 'playlists' ? catalogo.playlists : catalogo.videos;
   const initialPlayItem = playId
@@ -55,6 +62,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       initialTipo={tipo}
       initialBusca={busca}
       initialFonte={fonte}
+      initialSomenteOficiais={somenteOficiais}
       initialOrdem={ordem}
       initialPlayItem={initialPlayItem}
     />
