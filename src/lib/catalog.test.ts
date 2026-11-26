@@ -422,6 +422,13 @@ describe('live RSS feed sync', () => {
           </media:group>
         </entry>
         <entry>
+          <yt:videoId>short999</yt:videoId>
+          <link rel="alternate" href="https://www.youtube.com/shorts/short999"/>
+          <title>Corte vertical #shorts</title>
+          <author><name>Filipe Ramos - Vibes</name></author>
+          <published>2026-11-26T03:30:00+00:00</published>
+        </entry>
+        <entry>
           <yt:videoId>v1</yt:videoId>
           <title>Bloodborne — Guia de Yharnam</title>
           <author><name>Filipe Ramos</name></author>
@@ -435,6 +442,7 @@ describe('live RSS feed sync', () => {
 
     const parsed = parseYoutubeAtomFeed(xml, '@FilipeRamos96');
     expect(parsed.videos).toHaveLength(2);
+    expect(parsed.videos.some((v) => v.id === 'short999')).toBe(false);
     expect(parsed.videos[0].titulo).toBe('Live Nova & Quente');
     expect(parsed.videos[0].visualizacoes).toBe(4321);
 

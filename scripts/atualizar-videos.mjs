@@ -22,6 +22,26 @@ const api = async (endpoint, params) => {
 };
 const videos = new Map();
 const playlists = new Map();
+const shortsIds = new Set();
+const coletarShortsDoCanal = async (channelId) => {
+  if (!channelId?.startsWith('UC')) return;
+  const shortsPlaylist = `UUSH${channelId.slice(2)}`;
+  let token;
+  try {
+    do {
+      const params = { part: 'contentDetails', playlistId: shortsPlaylist, maxResults: '50' };
+      if (token) params.pageToken = token;
+      const page = await api('playlistItems', params);
+      for (const item of page.items ?? []) {
+        const id = item.contentDetails?.videoId;
+        if (id) shortsIds.add(id);
+      }
+      token = page.nextPageToken;
+    } while (token);
+  } catch {
+    // Canais sem Shorts retornam 404 na playlist UUSH
+  }
+};
 const addPlaylist = (item, name) => {
   const snippet = item.snippet;
   if (!item.id || !snippet || playlistsOcultas.has(item.id)) return;
@@ -80,6 +100,7 @@ for (const [blockText, name, link] of blocks) {
     playlist = result.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!playlist) throw new Error(`Canal não encontrado: ${name}`);
     const channelId = result.items[0].id;
+    await coletarShortsDoCanal(channelId);
     let nextPage;
     do {
       const params = { part: 'snippet,contentDetails', channelId, maxResults: '50' };
@@ -91,6 +112,10 @@ for (const [blockText, name, link] of blocks) {
   }
   console.log(`Atualizando ${name}...`);
   await coletarVideosDaPlaylist(playlist, name);
+}
+// Remove todos os YouTube Shorts detectados via playlists UUSH antes de consultar estatísticas.
+for (const shortId of shortsIds) {
+  videos.delete(shortId);
 }
 // Busca as visualizações em lotes de até 50 vídeos por requisição.
 const ids = [...videos.keys()];

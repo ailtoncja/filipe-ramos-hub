@@ -3,6 +3,7 @@ import type { Catalogo, Fonte, PlaylistCatalogo, VideoCatalogo } from './types';
 
 const ENTRY_RE = /<entry>([\s\S]*?)<\/entry>/g;
 const VIDEO_ID_RE = /<yt:videoId>([^<]+)<\/yt:videoId>/;
+const SHORT_LINK_RE = /<link[^>]+href="https?:\/\/[^"]*youtube\.com\/shorts\//i;
 const TITLE_RE = /<title>([^<]*)<\/title>/;
 const DESC_RE = /<media:description>([\s\S]*?)<\/media:description>/;
 const AUTHOR_RE = /<author>\s*<name>([^<]*)<\/name>/;
@@ -35,6 +36,7 @@ export function parseYoutubeAtomFeed(
   const videos: VideoCatalogo[] = [];
   for (const match of xml.matchAll(ENTRY_RE)) {
     const block = match[1];
+    if (SHORT_LINK_RE.test(block)) continue;
     const id = block.match(VIDEO_ID_RE)?.[1]?.trim();
     if (!id) continue;
 
