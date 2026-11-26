@@ -9,6 +9,7 @@ import {
 import { normalizarTexto } from './text';
 import type {
   Catalogo,
+  FiltroCategoriaFonte,
   OrdemCatalogo,
   PlaylistCatalogo,
   TipoCatalogo,
@@ -44,6 +45,7 @@ export interface FiltroCatalogoParams {
   tipo: TipoCatalogo;
   busca: string;
   fonte: string;
+  categoriaFonte?: FiltroCategoriaFonte;
   somenteOficiais?: boolean;
   ordem: OrdemCatalogo;
 }
@@ -68,6 +70,8 @@ export function filtrarCatalogo(
   const consulta = prepararConsultaBusca(params.busca);
   const temBusca = consulta.termos.length > 0;
   const fonte = params.fonte.trim();
+  const categoriaEfetiva: FiltroCategoriaFonte =
+    params.categoriaFonte ?? (params.somenteOficiais ? 'oficiais' : 'todos');
   const itens: (VideoCatalogo | PlaylistCatalogo)[] =
     params.tipo === 'playlists' ? catalogo.playlists : catalogo.videos;
 
@@ -77,7 +81,10 @@ export function filtrarCatalogo(
   }[] = [];
 
   for (const item of itens) {
-    if (params.somenteOficiais && !ehFonteOficial(item.fontes)) {
+    if (categoriaEfetiva === 'oficiais' && !ehFonteOficial(item.fontes)) {
+      continue;
+    }
+    if (categoriaEfetiva === 'nao-oficiais' && ehFonteOficial(item.fontes)) {
       continue;
     }
     if (fonte && !item.fontes.includes(fonte)) {

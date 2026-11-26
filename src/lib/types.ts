@@ -34,6 +34,7 @@ export interface Catalogo {
 
 export type TipoCatalogo = 'videos' | 'playlists';
 export type OrdemCatalogo = 'recentes' | 'antigos' | 'vistos';
+export type FiltroCategoriaFonte = 'todos' | 'oficiais' | 'nao-oficiais';
 
 export interface RecursoCarePackage {
   label: string;

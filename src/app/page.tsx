@@ -3,7 +3,11 @@ import { CARE_PACKAGES } from '@/data/care-packages';
 import { ehFonteOficial, FONTES } from '@/data/fontes';
 import { filtrarCatalogo } from '@/lib/catalog';
 import { carregarCatalogoServidor } from '@/lib/catalog.server';
-import type { OrdemCatalogo, TipoCatalogo } from '@/lib/types';
+import type {
+  FiltroCategoriaFonte,
+  OrdemCatalogo,
+  TipoCatalogo,
+} from '@/lib/types';
 
 interface HomePageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -23,7 +27,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const tipo: TipoCatalogo = tipoRaw === 'playlists' ? 'playlists' : 'videos';
   const busca = primeiroValor(params.q);
   const fonte = primeiroValor(params.fonte);
-  const somenteOficiais = primeiroValor(params.oficiais) === '1';
+  const canaisRaw = primeiroValor(params.canais);
+  const categoriaFonte: FiltroCategoriaFonte =
+    canaisRaw === 'oficiais' || primeiroValor(params.oficiais) === '1'
+      ? 'oficiais'
+      : canaisRaw === 'nao-oficiais'
+        ? 'nao-oficiais'
+        : 'todos';
   const ordemRaw = primeiroValor(params.ordem);
   const ordem: OrdemCatalogo =
     ordemRaw === 'antigos' || (ordemRaw === 'vistos' && tipo === 'videos')
@@ -35,7 +45,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     tipo,
     busca,
     fonte,
-    somenteOficiais,
+    categoriaFonte,
     ordem,
   });
   const initialItems = filtrados.slice(0, 25);
@@ -62,7 +72,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       initialTipo={tipo}
       initialBusca={busca}
       initialFonte={fonte}
-      initialSomenteOficiais={somenteOficiais}
+      initialCategoriaFonte={categoriaFonte}
       initialOrdem={ordem}
       initialPlayItem={initialPlayItem}
     />

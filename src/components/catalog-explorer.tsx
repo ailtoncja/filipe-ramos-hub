@@ -21,6 +21,7 @@ import { filtrarCatalogo, mesclarExtrasCatalogo } from '@/lib/catalog';
 import { formatarDataBR, formatarNumero } from '@/lib/text';
 import type {
   Catalogo,
+  FiltroCategoriaFonte,
   OrdemCatalogo,
   PlaylistCatalogo,
   TipoCatalogo,
@@ -29,7 +30,6 @@ import type {
 import { urlYoutubeDoItem } from '@/lib/youtube';
 import {
   ArrowRightIcon,
-  CheckIcon,
   CloseIcon,
   ExternalLinkIcon,
   ListVideoIcon,
@@ -98,7 +98,7 @@ interface CatalogExplorerProps {
   initialTipo: TipoCatalogo;
   initialBusca: string;
   initialFonte: string;
-  initialSomenteOficiais: boolean;
+  initialCategoriaFonte: FiltroCategoriaFonte;
   initialOrdem: OrdemCatalogo;
   initialPlayItem: VideoCatalogo | PlaylistCatalogo | null;
 }
@@ -115,7 +115,7 @@ export function CatalogExplorer({
   initialTipo,
   initialBusca,
   initialFonte,
-  initialSomenteOficiais,
+  initialCategoriaFonte,
   initialOrdem,
   initialPlayItem,
 }: CatalogExplorerProps) {
@@ -127,7 +127,9 @@ export function CatalogExplorer({
   const [tipo, setTipo] = useState<TipoCatalogo>(initialTipo);
   const [busca, setBusca] = useState(initialBusca);
   const [fonte, setFonte] = useState(initialFonte);
-  const [somenteOficiais, setSomenteOficiais] = useState(initialSomenteOficiais);
+  const [categoriaFonte, setCategoriaFonte] = useState<FiltroCategoriaFonte>(
+    initialCategoriaFonte,
+  );
   const [ordem, setOrdem] = useState<OrdemCatalogo>(initialOrdem);
   const [limite, setLimite] = useState(PAGE_SIZE);
   const [itemEmReproducao, setItemEmReproducao] = useState<
@@ -212,13 +214,13 @@ export function CatalogExplorer({
     if (busca.trim()) params.set('q', busca.trim());
     if (tipo === 'playlists') params.set('tipo', 'playlists');
     if (fonte) params.set('fonte', fonte);
-    if (somenteOficiais) params.set('oficiais', '1');
+    if (categoriaFonte !== 'todos') params.set('canais', categoriaFonte);
     if (ordem !== 'recentes') params.set('ordem', ordem);
     if (itemEmReproducao) params.set('play', itemEmReproducao.id);
 
     const qs = params.toString();
     window.history.replaceState(null, '', qs ? `/?${qs}` : '/');
-  }, [busca, tipo, fonte, somenteOficiais, ordem, itemEmReproducao]);
+  }, [busca, tipo, fonte, categoriaFonte, ordem, itemEmReproducao]);
 
   const resultadosFiltrados = useMemo(() => {
     if (!catalogoCompleto) return null;
@@ -226,10 +228,10 @@ export function CatalogExplorer({
       tipo,
       busca: buscaDiferida,
       fonte,
-      somenteOficiais,
+      categoriaFonte,
       ordem,
     });
-  }, [catalogoCompleto, tipo, buscaDiferida, fonte, somenteOficiais, ordem]);
+  }, [catalogoCompleto, tipo, buscaDiferida, fonte, categoriaFonte, ordem]);
 
   const totalVideosAtual = catalogoCompleto?.videos.length ?? totalVideos;
   const totalPlaylistsAtual = catalogoCompleto?.playlists.length ?? totalPlaylists;
@@ -243,7 +245,7 @@ export function CatalogExplorer({
   }, [catalogoCompleto, spotlightVideo]);
 
   const temFiltrosAtivos = Boolean(
-    busca.trim() || fonte || somenteOficiais || ordem !== 'recentes',
+    busca.trim() || fonte || categoriaFonte !== 'todos' || ordem !== 'recentes',
   );
   const mostrarDestaque = Boolean(
     spotlightAtual && tipo === 'videos' && !temFiltrosAtivos,
@@ -270,22 +272,30 @@ export function CatalogExplorer({
     });
   }, []);
 
-  const alternarSomenteOficiais = useCallback(() => {
-    const proximo = !somenteOficiais;
-    startTransition(() => {
-      setSomenteOficiais(proximo);
-      if (proximo && fonte && !FONTES_OFICIAIS_SET.has(fonte)) {
-        setFonte('');
-      }
-      setLimite(PAGE_SIZE);
-    });
-  }, [somenteOficiais, fonte]);
+  const trocarCategoriaFonte = useCallback(
+    (novaCategoria: FiltroCategoriaFonte) => {
+      startTransition(() => {
+        setCategoriaFonte(novaCategoria);
+        if (novaCategoria === 'oficiais' && fonte && !FONTES_OFICIAIS_SET.has(fonte)) {
+          setFonte('');
+        } else if (
+          novaCategoria === 'nao-oficiais' &&
+          fonte &&
+          FONTES_OFICIAIS_SET.has(fonte)
+        ) {
+          setFonte('');
+        }
+        setLimite(PAGE_SIZE);
+      });
+    },
+    [fonte],
+  );
 
   const limparFiltros = useCallback(() => {
     startTransition(() => {
       setBusca('');
       setFonte('');
-      setSomenteOficiais(false);
+      setCategoriaFonte('todos');
       setOrdem('recentes');
       setLimite(PAGE_SIZE);
     });
@@ -469,8 +479,14 @@ export function CatalogExplorer({
                   const novaFonte = e.target.value;
                   startTransition(() => {
                     setFonte(novaFonte);
-                    if (novaFonte && !FONTES_OFICIAIS_SET.has(novaFonte)) {
-                      setSomenteOficiais(false);
+                    if (novaFonte) {
+                      const ehOficial = FONTES_OFICIAIS_SET.has(novaFonte);
+                      if (
+                        (ehOficial && categoriaFonte === 'nao-oficiais') ||
+                        (!ehOficial && categoriaFonte === 'oficiais')
+                      ) {
+                        setCategoriaFonte('todos');
+                      }
                     }
                     setLimite(PAGE_SIZE);
                   });
@@ -478,7 +494,11 @@ export function CatalogExplorer({
                 className="min-w-0 flex-1 cursor-pointer bg-transparent text-sm font-medium text-[var(--ink)] focus:outline-none lg:max-w-[180px]"
               >
                 <option value="" className="bg-[var(--surface)] text-[var(--ink)]">
-                  {somenteOficiais ? 'Todos os oficiais' : 'Todas as fontes'}
+                  {categoriaFonte === 'oficiais'
+                    ? 'Todos os oficiais'
+                    : categoriaFonte === 'nao-oficiais'
+                      ? 'Todos os não oficiais'
+                      : 'Todas as fontes'}
                 </option>
                 <optgroup
                   label="Canais oficiais"
@@ -542,35 +562,55 @@ export function CatalogExplorer({
           </div>
         </div>
 
-        {/* Resumo dos resultados e filtro rápido de canais oficiais */}
+        {/* Resumo dos resultados e filtro rápido de canais oficiais / não oficiais */}
         <div
           aria-live="polite"
           className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--ink-muted)] tabular-nums"
         >
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <button
-              type="button"
-              onClick={alternarSomenteOficiais}
-              aria-pressed={somenteOficiais}
-              title="Mostrar apenas Filipe Ramos e Filipe Ramos - Baú de Lives"
-              className={`inline-flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 text-xs font-semibold transition-colors ${
-                somenteOficiais
-                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
-                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'
-              }`}
+            <div
+              role="group"
+              aria-label="Filtrar por tipo de canal"
+              className="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1"
             >
-              <span
-                aria-hidden="true"
-                className={`inline-flex h-4 w-4 items-center justify-center rounded border transition-colors ${
-                  somenteOficiais
-                    ? 'border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)]'
-                    : 'border-[var(--border-strong)] bg-[var(--bg)]'
-                }`}
-              >
-                {somenteOficiais ? <CheckIcon className="h-3 w-3" /> : null}
-              </span>
-              Apenas canais oficiais
-            </button>
+              {(
+                [
+                  {
+                    valor: 'todos',
+                    label: 'Todos',
+                    titulo: 'Mostrar vídeos e playlists de todas as fontes',
+                  },
+                  {
+                    valor: 'oficiais',
+                    label: 'Oficiais',
+                    titulo: 'Mostrar apenas Filipe Ramos e Filipe Ramos - Baú de Lives',
+                  },
+                  {
+                    valor: 'nao-oficiais',
+                    label: 'Não oficiais',
+                    titulo: 'Mostrar apenas canais e playlists da comunidade',
+                  },
+                ] as const
+              ).map((opcao) => {
+                const ativo = categoriaFonte === opcao.valor;
+                return (
+                  <button
+                    key={opcao.valor}
+                    type="button"
+                    onClick={() => trocarCategoriaFonte(opcao.valor)}
+                    aria-pressed={ativo}
+                    title={opcao.titulo}
+                    className={`min-h-9 cursor-pointer whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition-colors ${
+                      ativo
+                        ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
+                        : 'text-[var(--ink-secondary)] hover:text-[var(--ink)]'
+                    }`}
+                  >
+                    {opcao.label}
+                  </button>
+                );
+              })}
+            </div>
 
             {erroCarga ? (
               <span className="text-[var(--warn-ink)]">

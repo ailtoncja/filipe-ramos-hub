@@ -123,10 +123,28 @@ describe('catalog helpers', () => {
       tipo: 'playlists',
       busca: '',
       fonte: '',
-      somenteOficiais: true,
+      categoriaFonte: 'oficiais',
       ordem: 'recentes',
     });
     expect(playlistsOficiais.map((p) => p.id)).toEqual(['PL_WITCHER']);
+
+    const videosNaoOficiais = filtrarCatalogo(catalogoComComunidade, {
+      tipo: 'videos',
+      busca: '',
+      fonte: '',
+      categoriaFonte: 'nao-oficiais',
+      ordem: 'recentes',
+    });
+    expect(videosNaoOficiais.map((v) => v.id)).toEqual(['v2']);
+
+    const playlistsNaoOficiais = filtrarCatalogo(catalogoComComunidade, {
+      tipo: 'playlists',
+      busca: '',
+      fonte: '',
+      categoriaFonte: 'nao-oficiais',
+      ordem: 'recentes',
+    });
+    expect(playlistsNaoOficiais.map((p) => p.id)).toEqual(['PL_COMUNIDADE']);
   });
 
   it('encontra séries abreviadas (NFS Unbound ao buscar need for speed, GTA 4, RE9, FFXII, S.T.A.L.K.E.R.) e prioriza título sobre descrição', () => {
