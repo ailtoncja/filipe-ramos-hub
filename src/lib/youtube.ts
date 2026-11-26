@@ -11,7 +11,13 @@ export interface YoutubeEmbedInfo {
 
 function buildQueueEmbedUrl(
   videos: readonly string[],
-  options?: { initialVideoId?: string | null; start?: number | null; autoplay?: boolean },
+  options?: {
+    initialVideoId?: string | null;
+    start?: number | null;
+    autoplay?: boolean;
+    enableJsApi?: boolean;
+    origin?: string | null;
+  },
 ): string {
   const first =
     options?.initialVideoId && videos.includes(options.initialVideoId)
@@ -22,8 +28,10 @@ function buildQueueEmbedUrl(
       ? videos
       : [first, ...videos.filter((id) => id !== first)];
   const extra = new URLSearchParams();
-  if (options?.start) extra.set('start', String(options.start));
+  if (options?.start && options.start > 0) extra.set('start', String(Math.floor(options.start)));
   if (options?.autoplay) extra.set('autoplay', '1');
+  if (options?.enableJsApi) extra.set('enablejsapi', '1');
+  if (options?.origin) extra.set('origin', options.origin);
   const suffix = extra.toString();
   const playlistParam = `playlist=${ordered.map(encodeURIComponent).join(',')}`;
   return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(first)}?${playlistParam}${suffix ? `&${suffix}` : ''}`;
@@ -106,8 +114,17 @@ export function parseYoutubeUrl(url: string): YoutubeEmbedInfo | null {
   };
 }
 
-export function embedDeVideoId(id: string): string {
-  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;
+export function embedDeVideoId(
+  id: string,
+  options?: { start?: number | null; enableJsApi?: boolean; origin?: string | null },
+): string {
+  const qs = new URLSearchParams({ autoplay: '1', rel: '0' });
+  if (options?.start && options.start > 0) {
+    qs.set('start', String(Math.floor(options.start)));
+  }
+  if (options?.enableJsApi) qs.set('enablejsapi', '1');
+  if (options?.origin) qs.set('origin', options.origin);
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?${qs.toString()}`;
 }
 
 export function embedDePlaylistId(id: string): string {
@@ -122,11 +139,18 @@ export function embedDePlaylistId(id: string): string {
 export function embedDeFilaVideos(
   videoIds: readonly string[],
   atualId: string,
+  options?: { start?: number | null; enableJsApi?: boolean; origin?: string | null },
 ): string {
   const idx = videoIds.indexOf(atualId);
   const fila = idx >= 0 ? videoIds.slice(idx) : [atualId, ...videoIds];
-  if (fila.length <= 1) return embedDeVideoId(atualId);
-  return buildQueueEmbedUrl(fila, { initialVideoId: atualId, autoplay: true });
+  if (fila.length <= 1) return embedDeVideoId(atualId, options);
+  return buildQueueEmbedUrl(fila, {
+    initialVideoId: atualId,
+    autoplay: true,
+    start: options?.start,
+    enableJsApi: options?.enableJsApi,
+    origin: options?.origin,
+  });
 }
 
 export function urlYoutubeDoItem(id: string, tipo: 'videos' | 'playlists'): string {

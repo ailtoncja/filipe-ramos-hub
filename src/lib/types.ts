@@ -61,6 +61,12 @@ export interface MaratonaLocal {
   criadaEm: number;
 }
 
+export interface ProgressoVideoLocal {
+  tempo: number;
+  duracao: number;
+  atualizadoEm: number;
+}
+
 export interface RecursoCarePackage {
   label: string;
   url: string;

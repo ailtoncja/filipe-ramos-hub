@@ -28,7 +28,11 @@ import {
   montarUrlMaratona,
   ordenarVideosParaMaratona,
 } from '@/lib/sequencias';
-import { formatarDataBR, formatarNumero } from '@/lib/text';
+import {
+  formatarDataBR,
+  formatarNumero,
+  formatarTempoVideo,
+} from '@/lib/text';
 import type {
   Catalogo,
   FiltroCategoriaFonte,
@@ -200,6 +204,7 @@ export function CatalogExplorer({
     filaAtual,
     filaAtualSet,
     maratonas,
+    progressoVideos,
     recentes,
     totalSalvosVideos,
     totalSalvosPlaylists,
@@ -214,6 +219,8 @@ export function CatalogExplorer({
     limparFila,
     criarMaratona,
     excluirMaratona,
+    salvarProgresso,
+    resetarProgresso,
   } = useBibliotecaLocal();
 
   const buscaDiferida = useDeferredValue(busca);
@@ -1068,38 +1075,60 @@ export function CatalogExplorer({
             </button>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {itensRecentesResolvidos.map(({ item, tipo: tipoRecente }) => (
-              <button
-                key={`${tipoRecente}:${item.id}`}
-                type="button"
-                onClick={() => abrirNoPlayer(item, tipoRecente)}
-                className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition-colors hover:border-[var(--accent)]"
-              >
-                <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-[var(--player-bg)]">
-                  {item.miniatura ? (
-                    <img
-                      src={item.miniatura}
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : null}
-                  {tipoRecente === 'playlists' ? (
-                    <span className="absolute bottom-1 right-1 rounded bg-[var(--overlay-surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--overlay-ink)]">
-                      Playlist
-                    </span>
-                  ) : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="line-clamp-2 text-xs font-semibold leading-snug text-[var(--ink)] group-hover:text-[var(--accent-text)]">
-                    {item.titulo}
-                  </p>
-                  <p className="mt-1 truncate text-[11px] text-[var(--ink-muted)]">
-                    {nomeExibicaoDaFonte(item.canal)}
-                  </p>
-                </div>
-              </button>
-            ))}
+            {itensRecentesResolvidos.map(({ item, tipo: tipoRecente }) => {
+              const prog =
+                tipoRecente === 'videos' ? progressoVideos[item.id] : undefined;
+              const pct =
+                prog && prog.duracao > 0
+                  ? Math.min(100, Math.max(4, Math.round((prog.tempo / prog.duracao) * 100)))
+                  : prog
+                    ? 20
+                    : 0;
+              return (
+                <button
+                  key={`${tipoRecente}:${item.id}`}
+                  type="button"
+                  onClick={() => abrirNoPlayer(item, tipoRecente)}
+                  className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition-colors hover:border-[var(--accent)]"
+                >
+                  <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-[var(--player-bg)]">
+                    {item.miniatura ? (
+                      <img
+                        src={item.miniatura}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : null}
+                    {tipoRecente === 'playlists' ? (
+                      <span className="absolute bottom-1 right-1 rounded bg-[var(--overlay-surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--overlay-ink)]">
+                        Playlist
+                      </span>
+                    ) : prog ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-x-0 bottom-0 h-1 bg-black/60"
+                      >
+                        <span
+                          className="block h-full bg-[var(--accent)]"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-xs font-semibold leading-snug text-[var(--ink)] group-hover:text-[var(--accent-text)]">
+                      {item.titulo}
+                    </p>
+                    <p className="mt-1 truncate text-[11px] text-[var(--ink-muted)] tabular-nums">
+                      {prog
+                        ? `Parou em ${formatarTempoVideo(prog.tempo)}`
+                        : nomeExibicaoDaFonte(item.canal)}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
       ) : null}
@@ -1133,6 +1162,17 @@ export function CatalogExplorer({
             const oficial = ehFonteOficial(item.fontes);
             const salvo = salvosAtuaisSet.has(item.id);
             const assistido = tipo === 'videos' && assistidosVideosSet.has(item.id);
+            const progresso =
+              tipo === 'videos' ? progressoVideos[item.id] : undefined;
+            const progressoPct =
+              progresso && progresso.duracao > 0
+                ? Math.min(
+                    100,
+                    Math.max(4, Math.round((progresso.tempo / progresso.duracao) * 100)),
+                  )
+                : progresso
+                  ? 18
+                  : 0;
             const qtdVideos =
               'quantidadeVideos' in item && typeof item.quantidadeVideos === 'number'
                 ? item.quantidadeVideos
@@ -1183,6 +1223,22 @@ export function CatalogExplorer({
                         </span>
                       </span>
                     )}
+                    {progresso ? (
+                      <>
+                        <span className="absolute bottom-2.5 left-2.5 rounded-full border border-[var(--overlay-border)] bg-[var(--overlay-surface)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--overlay-ink)] tabular-nums">
+                          {formatarTempoVideo(progresso.tempo)}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-x-0 bottom-0 h-1 bg-black/60"
+                        >
+                          <span
+                            className="block h-full bg-[var(--accent)]"
+                            style={{ width: `${progressoPct}%` }}
+                          />
+                        </span>
+                      </>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-1 flex-col p-4 pb-2">
@@ -1422,10 +1478,15 @@ export function CatalogExplorer({
           nomeJogoRelacionados={relacionadosNoPlayer.nomeJogo}
           buscaJogoRelacionados={relacionadosNoPlayer.buscaJogo}
           filaAtualSet={filaAtualSet}
+          progressoSalvo={
+            tipo === 'videos' ? (progressoVideos[itemEmReproducao.id] ?? null) : null
+          }
           onToggleSalvo={() => toggleSalvo(itemEmReproducao.id, tipo)}
           onToggleAssistido={() => toggleAssistido(itemEmReproducao.id)}
           onToggleFila={() => toggleNaFila(itemEmReproducao.id)}
           onToggleItemFila={toggleNaFila}
+          onSalvarProgresso={salvarProgresso}
+          onResetarProgresso={resetarProgresso}
           onSelecionarEpisodio={(video) => {
             setItemEmReproducao(video);
             registrarAbertura(video.id, 'videos');

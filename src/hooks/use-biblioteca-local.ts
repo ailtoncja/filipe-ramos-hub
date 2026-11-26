@@ -5,10 +5,12 @@ import {
   alternarAssistido,
   alternarNaFila,
   alternarSalvo,
+  atualizarProgressoVideo,
   BIBLIOTECA_STORAGE_KEY,
   BIBLIOTECA_VAZIA,
   definirFila,
   type EstadoBibliotecaLocal,
+  limparProgressoVideo,
   limparRecentesBiblioteca,
   moverNaFila,
   parsearBibliotecaLocal,
@@ -145,6 +147,25 @@ export function useBibliotecaLocal() {
     });
   }, []);
 
+  const salvarProgresso = useCallback(
+    (videoId: string, tempo: number, duracao: number) => {
+      setEstado((atual) => {
+        const proximo = atualizarProgressoVideo(atual, videoId, tempo, duracao);
+        if (proximo !== atual) persistir(proximo);
+        return proximo;
+      });
+    },
+    [],
+  );
+
+  const resetarProgresso = useCallback((videoId: string) => {
+    setEstado((atual) => {
+      const proximo = limparProgressoVideo(atual, videoId);
+      if (proximo !== atual) persistir(proximo);
+      return proximo;
+    });
+  }, []);
+
   return {
     salvosVideosSet,
     salvosPlaylistsSet,
@@ -152,6 +173,7 @@ export function useBibliotecaLocal() {
     filaAtual: estado.filaAtual,
     filaAtualSet,
     maratonas: estado.maratonas,
+    progressoVideos: estado.progressoVideos,
     recentes: estado.recentes,
     totalSalvosVideos: estado.salvosVideos.length,
     totalSalvosPlaylists: estado.salvosPlaylists.length,
@@ -166,5 +188,7 @@ export function useBibliotecaLocal() {
     limparFila,
     criarMaratona,
     excluirMaratona,
+    salvarProgresso,
+    resetarProgresso,
   };
 }

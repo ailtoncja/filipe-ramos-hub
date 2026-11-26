@@ -6,9 +6,15 @@ import { montarUrlMaratona } from '@/lib/sequencias';
 import {
   formatarDataBR,
   formatarNumero,
+  formatarTempoVideo,
   segmentarTextoComLinks,
 } from '@/lib/text';
-import type { PlaylistCatalogo, TipoCatalogo, VideoCatalogo } from '@/lib/types';
+import type {
+  PlaylistCatalogo,
+  ProgressoVideoLocal,
+  TipoCatalogo,
+  VideoCatalogo,
+} from '@/lib/types';
 import {
   embedDeFilaVideos,
   embedDePlaylistId,
@@ -44,10 +50,13 @@ interface VideoPlayerModalProps {
   nomeJogoRelacionados?: string | null;
   buscaJogoRelacionados?: string | null;
   filaAtualSet?: ReadonlySet<string>;
+  progressoSalvo?: ProgressoVideoLocal | null;
   onToggleSalvo?: () => void;
   onToggleAssistido?: () => void;
   onToggleFila?: () => void;
   onToggleItemFila?: (videoId: string) => void;
+  onSalvarProgresso?: (videoId: string, tempo: number, duracao: number) => void;
+  onResetarProgresso?: (videoId: string) => void;
   onSelecionarEpisodio?: (video: VideoCatalogo) => void;
   onAbrirRelacionado?: (video: VideoCatalogo) => void;
   onBuscarJogoRelacionado?: (busca: string) => void;
@@ -70,10 +79,13 @@ export function VideoPlayerModal({
   nomeJogoRelacionados = null,
   buscaJogoRelacionados = null,
   filaAtualSet,
+  progressoSalvo = null,
   onToggleSalvo,
   onToggleAssistido,
   onToggleFila,
   onToggleItemFila,
+  onSalvarProgresso,
+  onResetarProgresso,
   onSelecionarEpisodio,
   onAbrirRelacionado,
   onBuscarJogoRelacionado,
@@ -84,11 +96,173 @@ export function VideoPlayerModal({
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [maratonaSalvaFeedback, setMaratonaSalvaFeedback] = useState(false);
   const [descricaoExpandida, setDescricaoExpandida] = useState(false);
+  const [inicioEmbed, setInicioEmbed] = useState<{
+    videoId: string;
+    tempo: number;
+    reinicio: number;
+  }>(() => ({
+    videoId: item.id,
+    tempo: tipo === 'videos' ? (progressoSalvo?.tempo ?? 0) : 0,
+    reinicio: 0,
+  }));
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const progressoAtualRef = useRef<{
+    videoId: string;
+    tempo: number;
+    duracao: number;
+    ultimoSalvoEm: number;
+  }>({
+    videoId: item.id,
+    tempo: 0,
+    duracao: 0,
+    ultimoSalvoEm: 0,
+  });
+  const onSalvarProgressoRef = useRef(onSalvarProgresso);
+  const onResetarProgressoRef = useRef(onResetarProgresso);
+  onSalvarProgressoRef.current = onSalvarProgresso;
+  onResetarProgressoRef.current = onResetarProgresso;
+
+  const tempoInicialParaIframe =
+    inicioEmbed.videoId === item.id
+      ? inicioEmbed.tempo
+      : tipo === 'videos'
+        ? (progressoSalvo?.tempo ?? 0)
+        : 0;
 
   useEffect(() => {
     setDescricaoExpandida(false);
-  }, [item.id]);
+    setInicioEmbed({
+      videoId: item.id,
+      tempo: tipo === 'videos' ? (progressoSalvo?.tempo ?? 0) : 0,
+      reinicio: 0,
+    });
+    progressoAtualRef.current = {
+      videoId: item.id,
+      tempo: 0,
+      duracao: 0,
+      ultimoSalvoEm: 0,
+    };
+    // Captura intencionalmente o progresso apenas ao trocar de vídeo, sem recarregar o iframe enquanto assiste
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id, tipo]);
+
+  useEffect(() => {
+    if (tipo !== 'videos') return;
+
+    function salvarAgora() {
+      const atual = progressoAtualRef.current;
+      if (atual.tempo >= 10) {
+        onSalvarProgressoRef.current?.(atual.videoId, atual.tempo, atual.duracao);
+        atual.ultimoSalvoEm = Date.now();
+      }
+    }
+
+    function aoReceberMensagem(event: MessageEvent) {
+      if (
+        event.origin !== 'https://www.youtube-nocookie.com' &&
+        event.origin !== 'https://www.youtube.com'
+      ) {
+        return;
+      }
+      if (typeof event.data !== 'string') return;
+      let payload: {
+        event?: string;
+        info?: {
+          currentTime?: number;
+          duration?: number;
+          playerState?: number;
+          videoData?: { video_id?: string };
+        };
+      };
+      try {
+        payload = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      if (payload.event !== 'infoDelivery' || !payload.info) return;
+      const info = payload.info;
+      const atual = progressoAtualRef.current;
+
+      if (info.videoData?.video_id && info.videoData.video_id !== atual.videoId) {
+        salvarAgora();
+        atual.videoId = info.videoData.video_id;
+        atual.tempo = 0;
+        atual.duracao = 0;
+        atual.ultimoSalvoEm = 0;
+      }
+
+      if (typeof info.duration === 'number' && Number.isFinite(info.duration) && info.duration > 0) {
+        atual.duracao = info.duration;
+      }
+      if (typeof info.currentTime === 'number' && Number.isFinite(info.currentTime)) {
+        atual.tempo = info.currentTime;
+      }
+
+      if (info.playerState === 0) {
+        // Vídeo terminou: limpa o ponto de retomada para começar do 0:00 numa próxima vez
+        onResetarProgressoRef.current?.(atual.videoId);
+        atual.tempo = 0;
+        return;
+      }
+
+      const agora = Date.now();
+      if (
+        info.playerState === 2 ||
+        (atual.tempo >= 10 && agora - atual.ultimoSalvoEm >= 5000)
+      ) {
+        salvarAgora();
+      }
+    }
+
+    window.addEventListener('message', aoReceberMensagem);
+    window.addEventListener('pagehide', salvarAgora);
+    return () => {
+      salvarAgora();
+      window.removeEventListener('message', aoReceberMensagem);
+      window.removeEventListener('pagehide', salvarAgora);
+    };
+  }, [tipo, item.id]);
+
+  function iniciarEscutaIframe() {
+    if (tipo !== 'videos') return;
+    const enviarHandshake = () => {
+      const win = iframeRef.current?.contentWindow;
+      if (!win) return;
+      win.postMessage(
+        JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }),
+        '*',
+      );
+      win.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'addEventListener',
+          args: ['onStateChange'],
+          id: 1,
+          channel: 'widget',
+        }),
+        '*',
+      );
+    };
+    enviarHandshake();
+    window.setTimeout(enviarHandshake, 700);
+  }
+
+  function recomecarDoInicio() {
+    onResetarProgresso?.(item.id);
+    progressoAtualRef.current = {
+      videoId: item.id,
+      tempo: 0,
+      duracao: progressoAtualRef.current.duracao,
+      ultimoSalvoEm: 0,
+    };
+    setInicioEmbed((atual) => ({
+      videoId: item.id,
+      tempo: 0,
+      reinicio: atual.reinicio + 1,
+    }));
+  }
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -118,6 +292,9 @@ export function VideoPlayerModal({
       ? sequencia[indiceAtual + 1]
       : null;
 
+  const embedOrigin =
+    typeof window !== 'undefined' ? window.location.origin : null;
+
   const embedSrc =
     tipo === 'playlists'
       ? embedDePlaylistId(item.id)
@@ -125,8 +302,17 @@ export function VideoPlayerModal({
         ? embedDeFilaVideos(
             sequencia.map((v) => v.id),
             item.id,
+            {
+              start: tempoInicialParaIframe,
+              enableJsApi: true,
+              origin: embedOrigin,
+            },
           )
-        : embedDeVideoId(item.id);
+        : embedDeVideoId(item.id, {
+            start: tempoInicialParaIframe,
+            enableJsApi: true,
+            origin: embedOrigin,
+          });
 
   const youtubeUrl = urlYoutubeDoItem(item.id, tipo);
   const oficial = ehFonteOficial(item.fontes);
@@ -233,9 +419,11 @@ export function VideoPlayerModal({
           <div className="flex w-full justify-center bg-[var(--player-bg)]">
             <div className="aspect-video max-h-[54dvh] w-full">
               <iframe
-                key={embedSrc}
+                ref={iframeRef}
+                key={`${embedSrc}:${inicioEmbed.reinicio}`}
                 src={embedSrc}
                 title={item.titulo}
+                onLoad={iniciarEscutaIframe}
                 className="h-full w-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
@@ -243,6 +431,21 @@ export function VideoPlayerModal({
               />
             </div>
           </div>
+
+          {tipo === 'videos' && tempoInicialParaIframe >= 10 ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] bg-[var(--accent-soft)] px-5 py-2 text-xs sm:px-6">
+              <span className="font-semibold text-[var(--accent-text)] tabular-nums">
+                Retomando de {formatarTempoVideo(tempoInicialParaIframe)}
+              </span>
+              <button
+                type="button"
+                onClick={recomecarDoInicio}
+                className="min-h-8 cursor-pointer font-semibold text-[var(--ink)] underline decoration-[var(--accent-soft-border)] underline-offset-2 hover:text-[var(--accent-text)]"
+              >
+                Começar do início
+              </button>
+            </div>
+          ) : null}
 
           {/* Controles de Anterior / Próximo quando em Sequência ou Maratona */}
           {temSequencia && onSelecionarEpisodio ? (

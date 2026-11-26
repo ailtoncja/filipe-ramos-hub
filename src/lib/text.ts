@@ -33,6 +33,19 @@ export function formatarDataBR(iso: string | null | undefined): string {
   return DATE_FORMATTER.format(parsed);
 }
 
+/** Formata segundos de reprodução em mm:ss ou h:mm:ss (ex.: 75 -> "1:15", 5055 -> "1:24:15"). */
+export function formatarTempoVideo(segundos: number): string {
+  const total = Math.max(0, Math.floor(segundos));
+  const horas = Math.floor(total / 3600);
+  const minutos = Math.floor((total % 3600) / 60);
+  const segs = total % 60;
+  const ss = String(segs).padStart(2, '0');
+  if (horas > 0) {
+    return `${horas}:${String(minutos).padStart(2, '0')}:${ss}`;
+  }
+  return `${minutos}:${ss}`;
+}
+
 /** Remove emojis decorativos no início de títulos de notas mantendo o texto íntegro. */
 export function limparPrefixoEmoji(titulo: string): string {
   return titulo.replace(LEADING_EMOJI_RE, '').trim();

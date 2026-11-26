@@ -1,8 +1,15 @@
 import { MAX_VIDEOS_MARATONA } from './sequencias';
-import type { ItemRecenteLocal, MaratonaLocal, TipoCatalogo } from './types';
+import type {
+  ItemRecenteLocal,
+  MaratonaLocal,
+  ProgressoVideoLocal,
+  TipoCatalogo,
+} from './types';
 
 export const BIBLIOTECA_STORAGE_KEY = 'frh:biblioteca:v1';
 export const MAX_RECENTES = 4;
+export const MAX_PROGRESSOS = 200;
+export const MIN_SEGUNDOS_PROGRESSO = 10;
 
 export interface EstadoBibliotecaLocal {
   salvosVideos: string[];
@@ -11,6 +18,7 @@ export interface EstadoBibliotecaLocal {
   recentes: ItemRecenteLocal[];
   filaAtual: string[];
   maratonas: MaratonaLocal[];
+  progressoVideos: Record<string, ProgressoVideoLocal>;
 }
 
 export const BIBLIOTECA_VAZIA: EstadoBibliotecaLocal = {
@@ -20,6 +28,7 @@ export const BIBLIOTECA_VAZIA: EstadoBibliotecaLocal = {
   recentes: [],
   filaAtual: [],
   maratonas: [],
+  progressoVideos: {},
 };
 
 function limparListaIds(valor: unknown): string[] {
@@ -88,6 +97,41 @@ function limparMaratonas(valor: unknown): MaratonaLocal[] {
   return limpas;
 }
 
+function limparProgressos(
+  valor: unknown,
+): Record<string, ProgressoVideoLocal> {
+  if (!valor || typeof valor !== 'object' || Array.isArray(valor)) return {};
+  const entradas: [string, ProgressoVideoLocal][] = [];
+  for (const [id, item] of Object.entries(valor as Record<string, unknown>)) {
+    if (!id.trim() || !item || typeof item !== 'object') continue;
+    const rec = item as Partial<ProgressoVideoLocal>;
+    if (
+      typeof rec.tempo !== 'number' ||
+      !Number.isFinite(rec.tempo) ||
+      rec.tempo < MIN_SEGUNDOS_PROGRESSO
+    ) {
+      continue;
+    }
+    const duracao =
+      typeof rec.duracao === 'number' && Number.isFinite(rec.duracao) && rec.duracao > 0
+        ? Math.floor(rec.duracao)
+        : 0;
+    entradas.push([
+      id,
+      {
+        tempo: Math.floor(rec.tempo),
+        duracao,
+        atualizadoEm:
+          typeof rec.atualizadoEm === 'number' && Number.isFinite(rec.atualizadoEm)
+            ? rec.atualizadoEm
+            : 0,
+      },
+    ]);
+  }
+  entradas.sort((a, b) => b[1].atualizadoEm - a[1].atualizadoEm);
+  return Object.fromEntries(entradas.slice(0, MAX_PROGRESSOS));
+}
+
 export function parsearBibliotecaLocal(raw: string | null): EstadoBibliotecaLocal {
   if (!raw) return BIBLIOTECA_VAZIA;
   try {
@@ -99,6 +143,7 @@ export function parsearBibliotecaLocal(raw: string | null): EstadoBibliotecaLoca
       recentes: limparRecentes(parsed.recentes),
       filaAtual: limparListaIds(parsed.filaAtual).slice(0, MAX_VIDEOS_MARATONA),
       maratonas: limparMaratonas(parsed.maratonas),
+      progressoVideos: limparProgressos(parsed.progressoVideos),
     };
   } catch {
     return BIBLIOTECA_VAZIA;
@@ -227,5 +272,69 @@ export function removerMaratonaLocal(
   return {
     ...estado,
     maratonas: estado.maratonas.filter((m) => m.id !== maratonaId),
+  };
+}
+
+/**
+ * Salva o ponto onde o usuário parou em um vídeo.
+ * - Ignora tempos < 10s (para não poluir em espiadas rápidas).
+ * - Limpa o progresso automaticamente quando o vídeo chega ao final (>= 97% ou últimos 15s).
+ */
+export function atualizarProgressoVideo(
+  estado: EstadoBibliotecaLocal,
+  videoId: string,
+  tempo: number,
+  duracao: number,
+  agora = Date.now(),
+): EstadoBibliotecaLocal {
+  if (!videoId || !Number.isFinite(tempo)) return estado;
+  const tempoInt = Math.floor(tempo);
+  const duracaoInt =
+    Number.isFinite(duracao) && duracao > 0 ? Math.floor(duracao) : 0;
+
+  const chegouNoFinal =
+    duracaoInt > 30 &&
+    (tempoInt >= duracaoInt - 15 || tempoInt / duracaoInt >= 0.97);
+
+  if (chegouNoFinal) {
+    return limparProgressoVideo(estado, videoId);
+  }
+
+  if (tempoInt < MIN_SEGUNDOS_PROGRESSO) {
+    return estado;
+  }
+
+  const proximo: Record<string, ProgressoVideoLocal> = {
+    ...estado.progressoVideos,
+    [videoId]: { tempo: tempoInt, duracao: duracaoInt, atualizadoEm: agora },
+  };
+
+  const chaves = Object.keys(proximo);
+  if (chaves.length > MAX_PROGRESSOS) {
+    const ordenadas = Object.entries(proximo)
+      .sort((a, b) => b[1].atualizadoEm - a[1].atualizadoEm)
+      .slice(0, MAX_PROGRESSOS);
+    return {
+      ...estado,
+      progressoVideos: Object.fromEntries(ordenadas),
+    };
+  }
+
+  return {
+    ...estado,
+    progressoVideos: proximo,
+  };
+}
+
+export function limparProgressoVideo(
+  estado: EstadoBibliotecaLocal,
+  videoId: string,
+): EstadoBibliotecaLocal {
+  if (!(videoId in estado.progressoVideos)) return estado;
+  const copia = { ...estado.progressoVideos };
+  delete copia[videoId];
+  return {
+    ...estado,
+    progressoVideos: copia,
   };
 }

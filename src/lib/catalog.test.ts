@@ -6,7 +6,9 @@ import {
   alternarAssistido,
   alternarNaFila,
   alternarSalvo,
+  atualizarProgressoVideo,
   BIBLIOTECA_VAZIA,
+  limparProgressoVideo,
   limparRecentesBiblioteca,
   moverNaFila,
   parsearBibliotecaLocal,
@@ -26,13 +28,13 @@ import {
   montarUrlMaratona,
   parsearMaratonaDaUrl,
 } from './sequencias';
-import { segmentarTextoComLinks } from './text';
+import { formatarTempoVideo, segmentarTextoComLinks } from './text';
 import {
   encontrarCarePackageParaJogoTwitch,
   interpretarUptimeDecApi,
 } from './twitch';
 import type { Catalogo } from './types';
-import { embedDePlaylistId, parseYoutubeUrl } from './youtube';
+import { embedDePlaylistId, embedDeVideoId, parseYoutubeUrl } from './youtube';
 import {
   mesclarNovidadesNoCatalogo,
   parseYoutubeAtomFeed,
@@ -700,5 +702,42 @@ describe('biblioteca local e integração Twitch', () => {
       expect(rel.videos.every((v) => /unbound/i.test(v.titulo))).toBe(true);
       expect(rel.videos.some((v) => seqIds.has(v.id))).toBe(false);
     }
+  });
+
+  it('salva e retoma progresso de vídeo por tempo (ignorando <10s e limpando ao concluir)', () => {
+    expect(formatarTempoVideo(75)).toBe('1:15');
+    expect(formatarTempoVideo(5055)).toBe('1:24:15');
+
+    let est = atualizarProgressoVideo(BIBLIOTECA_VAZIA, 'v1', 5, 3600, 100);
+    expect(est.progressoVideos.v1).toBeUndefined();
+
+    est = atualizarProgressoVideo(est, 'v1', 1245.7, 3600, 200);
+    expect(est.progressoVideos.v1).toEqual({
+      tempo: 1245,
+      duracao: 3600,
+      atualizadoEm: 200,
+    });
+
+    const reidratado = parsearBibliotecaLocal(JSON.stringify(est));
+    expect(reidratado.progressoVideos.v1?.tempo).toBe(1245);
+
+    // Ao chegar nos últimos 15s (>= 97%), limpa automaticamente
+    est = atualizarProgressoVideo(est, 'v1', 3590, 3600, 300);
+    expect(est.progressoVideos.v1).toBeUndefined();
+
+    // Limpeza manual
+    est = atualizarProgressoVideo(est, 'v2', 400, 1000, 400);
+    est = limparProgressoVideo(est, 'v2');
+    expect(est.progressoVideos.v2).toBeUndefined();
+
+    expect(
+      embedDeVideoId('KGkJMJviRQs', {
+        start: 1245,
+        enableJsApi: true,
+        origin: 'https://filipe-ramos-hub.vercel.app',
+      }),
+    ).toBe(
+      'https://www.youtube-nocookie.com/embed/KGkJMJviRQs?autoplay=1&rel=0&start=1245&enablejsapi=1&origin=https%3A%2F%2Ffilipe-ramos-hub.vercel.app',
+    );
   });
 });
